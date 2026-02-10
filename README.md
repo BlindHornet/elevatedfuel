@@ -26,6 +26,7 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
    - View Direct Link of Source
    - Add To Meal Plan
    - Add To Favorites
+   - Add Ingredients To Shopping Cart
 6. Favorites
    - Delete From Favorites
 7. Meal Planner
@@ -41,8 +42,6 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
    - Quickly Pullback Pending Submissoins (Verify No Junk Added)
      - Approve / Reject Submissions
 3. Pages
-   - Shopping List
-   - Recommend Items (Food Scale/Anything Else)
    - Settings
      - Link Family Member (Shared Meal Plan/Favorites)
      - Change Name / Other Settings
@@ -50,8 +49,6 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
 4. Add Recipe
    - If link provided, try to scrape directions and ingredients
    - Add custom image for card
-5. View Recipe
-   - Add Ingredients To Shopping List
 
 # Contributing
 
