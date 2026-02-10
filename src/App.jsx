@@ -15,6 +15,7 @@ import Favorites from "./pages/Favorites";
 import EditRecipe from "./pages/EditRecipe";
 import AddRecipe from "./pages/AddRecipe";
 import WeeklyMealPlan from "./pages/WeeklyMealPlan";
+import Storefront from "./pages/Storefront";
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/edit-recipe/:id" element={<EditRecipe />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/weekly-meal-plan" element={<WeeklyMealPlan />} />
+        <Route path="/recommendations" element={<Storefront />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
