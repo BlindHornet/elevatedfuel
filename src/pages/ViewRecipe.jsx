@@ -12,6 +12,7 @@ import {
   CheckCircle,
   Tag,
   Save,
+  CalendarCheck,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -88,6 +89,7 @@ function StarRating({ rating, size = "w-4 h-4", label = "" }) {
 export default function ViewRecipe() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [showMealPlanSuccess, setShowMealPlanSuccess] = useState(false);
   const [recipe, setRecipe] = useState(null);
   const [comments, setComments] = useState([]);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -209,10 +211,7 @@ export default function ViewRecipe() {
         addedAt: serverTimestamp(),
       });
 
-      alert(
-        "Recipe added to your meal plan library! Go to the meal plan page to schedule it.",
-      );
-      navigate("/meal-plan");
+      setShowMealPlanSuccess(true);
     } catch (err) {
       console.error("Error adding to meal plan:", err);
       alert("Failed to add recipe to meal plan.");
@@ -634,7 +633,42 @@ export default function ViewRecipe() {
         </div>
       </main>
 
-      {/* MODALS REMAIN THE SAME... */}
+      {/* MODALS */}
+      {showMealPlanSuccess && (
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center px-4">
+          <div className="bg-card border border-border p-8 rounded-[var(--radius-lg)] max-w-md w-full text-center space-y-6">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center">
+              <CalendarCheck className="text-brand" size={32} />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black uppercase tracking-tight">
+                Fuel Added!
+              </h2>
+              <p className="text-muted leading-relaxed">
+                Recipe successfully added to your meal plan library. Ready to
+                schedule?
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => navigate("/weekly-meal-plan")}
+                className="w-full py-4 bg-brand text-white rounded-full font-black uppercase tracking-widest shadow-lg"
+              >
+                Go to Meal Plan
+              </button>
+              <button
+                onClick={() => setShowMealPlanSuccess(false)}
+                className="w-full py-4 border border-border rounded-full font-black uppercase tracking-widest text-muted hover:text-text transition-colors"
+              >
+                Keep Browsing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showReviewModal && (
         <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center px-4">
           <div className="bg-card border border-border p-8 rounded-[var(--radius-lg)] max-w-md w-full">
