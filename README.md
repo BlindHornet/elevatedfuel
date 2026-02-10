@@ -61,7 +61,7 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
 ## Local Dev
 
 1. Pull project down to local folder
-2. Install local modules needed to run by running the command: **npm install**
+2. Install local modules needed to run by running the command within the terminal: **npm install**
 3. Create inside the main folder a file named **.env.local**
 4. Add these values to your **.env.local** file and populate with your own data:
 
@@ -81,3 +81,5 @@ VITE_FIREBASE_APP_ID=your_app_id
 # =====================================
 VITE_ADMIN_EMAIL=admin@example.com
 ```
+
+5. Then within terminal inside your project folder type **npm run dev**
