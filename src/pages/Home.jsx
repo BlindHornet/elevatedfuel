@@ -104,7 +104,7 @@ export default function Home() {
             advancedFilters.carbsMax,
           ) &&
           checkRange(
-            r.macros?.fats,
+            r.macros?.fat,
             advancedFilters.fatsMin,
             advancedFilters.fatsMax,
           ) &&
