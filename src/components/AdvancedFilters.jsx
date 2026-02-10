@@ -1,9 +1,55 @@
 // Module Imports
 import React from "react";
-import { X } from "lucide-react";
+import { X, Thermometer, Tag, Zap, Activity } from "lucide-react";
+
+// ✅ MOVED OUTSIDE: Defining this here prevents the "losing focus" issue
+// because React no longer treats it as a new component on every render.
+const NutritionInput = ({
+  label,
+  minKey,
+  maxKey,
+  colorClass,
+  icon: Icon,
+  filters,
+  updateFilter,
+}) => (
+  <div className="space-y-3 p-4 rounded-2xl bg-white/[0.02] border border-white/5 transition-all hover:border-white/10">
+    <div className="flex items-center gap-2">
+      <div
+        className={`p-1.5 rounded-lg bg-${colorClass}/10 text-${colorClass}`}
+      >
+        <Icon size={14} />
+      </div>
+      <label className="text-[11px] font-black uppercase tracking-widest text-text/70">
+        {label}
+      </label>
+    </div>
+    <div className="flex gap-2 items-center">
+      <input
+        type="number"
+        min="0" // Prevents using the arrow keys to go below 0
+        placeholder="Min"
+        value={filters[minKey]}
+        onChange={(e) => updateFilter(minKey, e.target.value)}
+        className="w-full rounded-xl bg-bg border border-border px-3 py-2.5 text-xs font-bold focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all placeholder:text-muted/50"
+      />
+      <div className="w-2 h-px bg-border shrink-0" />
+      <input
+        type="number"
+        min="0" // Prevents using the arrow keys to go below 0
+        placeholder="Max"
+        value={filters[maxKey]}
+        onChange={(e) => updateFilter(maxKey, e.target.value)}
+        className="w-full rounded-xl bg-bg border border-border px-3 py-2.5 text-xs font-bold focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all placeholder:text-muted/50"
+      />
+    </div>
+  </div>
+);
 
 export default function AdvancedFilters({ filters, setFilters, tags }) {
+  // ✅ UPDATED LOGIC: Prevent negative values from entering the state
   const updateFilter = (key, value) => {
+    if (value !== "" && Number(value) < 0) return;
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -44,181 +90,139 @@ export default function AdvancedFilters({ filters, setFilters, tags }) {
   };
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-6 mb-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-text">Advanced Filters</h3>
+    <div className="bg-card border border-border rounded-[2rem] p-8 mb-8 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-1 h-6 bg-brand rounded-full" />
+          <h3 className="text-xl font-black uppercase tracking-tighter text-text">
+            Refine <span className="text-brand">Fuel</span>
+          </h3>
+        </div>
         {hasActiveFilters && (
           <button
             onClick={clearAll}
-            className="text-xs text-muted hover:text-brand transition-colors flex items-center gap-1"
+            className="px-4 py-2 rounded-full bg-white/5 text-[10px] font-black uppercase tracking-widest text-muted hover:text-brand hover:bg-brand/10 transition-all flex items-center gap-2"
           >
-            <X className="h-3 w-3" />
-            Clear all
+            <X size={12} strokeWidth={3} />
+            Reset Filters
           </button>
         )}
       </div>
 
-      {/* Serving Temperature */}
-      <div>
-        <label className="block text-sm font-medium text-text mb-2">
-          Serving Temperature
-        </label>
-        <div className="flex gap-2">
-          {["all", "hot", "cold"].map((temp) => (
-            <button
-              key={temp}
-              onClick={() => updateFilter("servingTemp", temp)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
-                filters.servingTemp === temp
-                  ? "bg-brand border-brand text-white"
-                  : "bg-transparent border-border text-muted hover:border-brand"
-              }`}
-            >
-              {temp.charAt(0).toUpperCase() + temp.slice(1)}
-            </button>
-          ))}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8 mb-8">
+        {/* Serving Temperature */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-muted">
+            <Thermometer size={14} />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+              Serving Temp
+            </span>
+          </div>
+          <div className="flex p-1 bg-bg border border-border rounded-2xl">
+            {["all", "hot", "cold"].map((temp) => (
+              <button
+                key={temp}
+                onClick={() => updateFilter("servingTemp", temp)}
+                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  filters.servingTemp === temp
+                    ? "bg-brand text-white shadow-lg shadow-brand/20"
+                    : "text-muted hover:text-text"
+                }`}
+              >
+                {temp}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tags */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-muted">
+            <Tag size={14} />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+              Dietary Tags
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag) => {
+              const isActive = filters.selectedTags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                    isActive
+                      ? "bg-brand/10 border-brand text-brand shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+                      : "bg-bg border-border text-muted hover:border-muted/50"
+                  }`}
+                >
+                  {tag}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Tags */}
-      <div>
-        <label className="block text-sm font-medium text-text mb-2">
-          Tags (select multiple)
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => toggleTag(tag)}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all ${
-                filters.selectedTags.includes(tag)
-                  ? "bg-brand border-brand text-white"
-                  : "bg-transparent border-border text-muted hover:border-muted"
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Nutrition Ranges */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Calories */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-text">
-            Calories
-          </label>
-          <div className="flex gap-2 items-center">
-            <input
-              type="number"
-              placeholder="Min"
-              value={filters.caloriesMin}
-              onChange={(e) => updateFilter("caloriesMin", e.target.value)}
-              className="w-full rounded-lg bg-bg border border-border px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all"
-            />
-            <span className="text-muted text-sm">-</span>
-            <input
-              type="number"
-              placeholder="Max"
-              value={filters.caloriesMax}
-              onChange={(e) => updateFilter("caloriesMax", e.target.value)}
-              className="w-full rounded-lg bg-bg border border-border px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all"
-            />
-          </div>
-        </div>
-
-        {/* Carbs */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-text">
-            Carbs (g)
-          </label>
-          <div className="flex gap-2 items-center">
-            <input
-              type="number"
-              placeholder="Min"
-              value={filters.carbsMin}
-              onChange={(e) => updateFilter("carbsMin", e.target.value)}
-              className="w-full rounded-lg bg-bg border border-border px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all"
-            />
-            <span className="text-muted text-sm">-</span>
-            <input
-              type="number"
-              placeholder="Max"
-              value={filters.carbsMax}
-              onChange={(e) => updateFilter("carbsMax", e.target.value)}
-              className="w-full rounded-lg bg-bg border border-border px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all"
-            />
-          </div>
-        </div>
-
-        {/* Fats */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-text">
-            Fats (g)
-          </label>
-          <div className="flex gap-2 items-center">
-            <input
-              type="number"
-              placeholder="Min"
-              value={filters.fatsMin}
-              onChange={(e) => updateFilter("fatsMin", e.target.value)}
-              className="w-full rounded-lg bg-bg border border-border px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all"
-            />
-            <span className="text-muted text-sm">-</span>
-            <input
-              type="number"
-              placeholder="Max"
-              value={filters.fatsMax}
-              onChange={(e) => updateFilter("fatsMax", e.target.value)}
-              className="w-full rounded-lg bg-bg border border-border px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all"
-            />
-          </div>
-        </div>
-
-        {/* Protein */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-text">
-            Protein (g)
-          </label>
-          <div className="flex gap-2 items-center">
-            <input
-              type="number"
-              placeholder="Min"
-              value={filters.proteinMin}
-              onChange={(e) => updateFilter("proteinMin", e.target.value)}
-              className="w-full rounded-lg bg-bg border border-border px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all"
-            />
-            <span className="text-muted text-sm">-</span>
-            <input
-              type="number"
-              placeholder="Max"
-              value={filters.proteinMax}
-              onChange={(e) => updateFilter("proteinMax", e.target.value)}
-              className="w-full rounded-lg bg-bg border border-border px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all"
-            />
-          </div>
-        </div>
+      {/* Nutrition Ranges Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-8 border-t border-border/50">
+        <NutritionInput
+          label="Calories"
+          minKey="caloriesMin"
+          maxKey="caloriesMax"
+          colorClass="brand"
+          icon={Zap}
+          filters={filters}
+          updateFilter={updateFilter}
+        />
+        <NutritionInput
+          label="Protein"
+          minKey="proteinMin"
+          maxKey="proteinMax"
+          colorClass="red-500"
+          icon={Activity}
+          filters={filters}
+          updateFilter={updateFilter}
+        />
+        <NutritionInput
+          label="Carbs"
+          minKey="carbsMin"
+          maxKey="carbsMax"
+          colorClass="blue-500"
+          icon={Activity}
+          filters={filters}
+          updateFilter={updateFilter}
+        />
+        <NutritionInput
+          label="Fats"
+          minKey="fatsMin"
+          maxKey="fatsMax"
+          colorClass="yellow-500"
+          icon={Activity}
+          filters={filters}
+          updateFilter={updateFilter}
+        />
       </div>
 
       {/* Active filters summary */}
       {hasActiveFilters && (
-        <div className="pt-4 border-t border-border">
-          <p className="text-xs text-muted">
-            Active filters:{" "}
-            {[
-              filters.servingTemp !== "all" && filters.servingTemp,
-              filters.selectedTags.length > 0 &&
-                `${filters.selectedTags.length} tag${
-                  filters.selectedTags.length > 1 ? "s" : ""
-                }`,
-              (filters.caloriesMin || filters.caloriesMax) && "calories",
-              (filters.carbsMin || filters.carbsMax) && "carbs",
-              (filters.fatsMin || filters.fatsMax) && "fats",
-              (filters.proteinMin || filters.proteinMax) && "protein",
-            ]
-              .filter(Boolean)
-              .join(", ")}
+        <div className="mt-8 px-5 py-3 bg-brand/5 border border-brand/10 rounded-2xl">
+          <p className="text-[10px] font-bold text-brand uppercase tracking-widest flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
+            Filtering by:{" "}
+            <span className="text-text">
+              {[
+                filters.servingTemp !== "all" && `${filters.servingTemp} temp`,
+                filters.selectedTags.length > 0 &&
+                  `${filters.selectedTags.length} tags`,
+                (filters.caloriesMin || filters.caloriesMax) && "calories",
+                (filters.proteinMin || filters.proteinMax) && "protein",
+                (filters.carbsMin || filters.carbsMax) && "carbs",
+                (filters.fatsMin || filters.fatsMax) && "fats",
+              ]
+                .filter(Boolean)
+                .join(" • ")}
+            </span>
           </p>
         </div>
       )}
