@@ -1,4 +1,3 @@
-// Module Imports
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -6,16 +5,17 @@ import {
   ChevronRight,
   RotateCcw,
   Trash2,
-  GripVertical,
   Calendar,
   Eye,
+  Plus,
+  X,
+  Check,
 } from "lucide-react";
 
 // Firebase Imports
 import { db, auth } from "../lib/firebase";
 import {
   doc,
-  getDoc,
   setDoc,
   deleteDoc,
   serverTimestamp,
@@ -23,22 +23,16 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 
-const MEALS = ["Breakfast", "Snack", "Lunch", "Snack", "Dinner", "Dessert"];
-const DAYS_TO_SHOW = 7; // Show 7 days rolling
+const MEALS = ["Breakfast", "Snack 1", "Lunch", "Snack 2", "Dinner", "Dessert"];
+const DAYS_TO_SHOW = 4; // Show 4 days for bigger boxes
 
-// Generate day keys based on date
 function getDayKey(date) {
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD format
+  return date.toISOString().split("T")[0];
 }
 
 function getDayLabel(date) {
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   return days[date.getDay()];
-}
-
-function weekKey(startDate) {
-  // Use the start date to create a unique key for this 7-day period
-  return getDayKey(startDate);
 }
 
 function addDays(date, n) {
@@ -47,119 +41,100 @@ function addDays(date, n) {
   return d;
 }
 
-function fmt(date) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-  }).format(date);
-}
-
-function emptySlots() {
-  const slots = {};
-  // Create slots for 7 days from start date
-  for (let i = 0; i < DAYS_TO_SHOW; i++) {
-    const dayKey = `day_${i}`; // day_0, day_1, day_2, etc.
-    slots[dayKey] = {};
-    for (let j = 0; j < MEALS.length; j++) {
-      slots[dayKey][`${MEALS[j]}_${j}`] = null;
-    }
-  }
-  return slots;
-}
-
 export default function WeeklyMealPlan() {
   const navigate = useNavigate();
-  const [startDate, setStartDate] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
-  });
-  const [loading, setLoading] = useState(true);
-  const [slots, setSlots] = useState(() => emptySlots());
-  const [availableRecipes, setAvailableRecipes] = useState([]);
-  const [error, setError] = useState("");
-  const [draggedRecipe, setDraggedRecipe] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'library', id } or { type: 'slot', day, meal }
-  const [selectedRecipeForMobile, setSelectedRecipeForMobile] = useState(null); // For mobile tap-to-add
+  const [startDate, setStartDate] = useState(new Date());
+  const [mealPlan, setMealPlan] = useState({});
+  const [libraryRecipes, setLibraryRecipes] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [draggedRecipe, setDraggedRecipe] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  // Mobile & Replacement State
+  const [mobileAddRecipe, setMobileAddRecipe] = useState(null);
+  const [replaceConfirm, setReplaceConfirm] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => setCurrentUser(user));
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setCurrentUser(user);
+      if (!user) setLoading(false);
+    });
     return () => unsubscribe();
   }, []);
 
-  const periodId = useMemo(() => weekKey(startDate), [startDate]);
-  const endDate = useMemo(
-    () => addDays(startDate, DAYS_TO_SHOW - 1),
-    [startDate],
-  );
-
+  // Sync Library
   useEffect(() => {
     if (!currentUser) return;
-    const recipesRef = collection(
-      db,
-      "users",
-      currentUser.uid,
-      "mealPlanRecipes",
-    );
-    return onSnapshot(recipesRef, (snapshot) => {
-      setAvailableRecipes(
-        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
-      );
+    const q = collection(db, "users", currentUser.uid, "mealPlanRecipes");
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const recipesMap = {};
+      snapshot.forEach((doc) => {
+        recipesMap[doc.id] = { id: doc.id, ...doc.data() };
+      });
+      setLibraryRecipes(recipesMap);
     });
+    return () => unsubscribe();
   }, [currentUser]);
 
+  // Sync Schedule
   useEffect(() => {
-    async function loadWeek() {
-      if (!currentUser) {
-        setLoading(false);
-        return;
+    if (!currentUser) return;
+    const planRef = doc(db, "users", currentUser.uid, "mealPlans", "current");
+    const unsubscribe = onSnapshot(planRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setMealPlan(docSnap.data().plan || {});
       }
-      setLoading(true);
-      try {
-        const snap = await getDoc(
-          doc(db, "users", currentUser.uid, "mealPlans", periodId),
-        );
-        setSlots(snap.exists() ? snap.data().slots : emptySlots());
-      } catch (e) {
-        setError("Could not load meal plan.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadWeek();
-  }, [periodId, currentUser]);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, [currentUser]);
 
-  async function saveSlots(newSlots) {
+  const saveMealPlan = async (newPlan) => {
     if (!currentUser) return;
     try {
-      await setDoc(
-        doc(db, "users", currentUser.uid, "mealPlans", periodId),
-        {
-          periodId,
-          startDate: startDate.toISOString(),
-          slots: newSlots,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true },
-      );
-    } catch (e) {
-      setError("Could not save changes.");
+      await setDoc(doc(db, "users", currentUser.uid, "mealPlans", "current"), {
+        plan: newPlan,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error("Error saving meal plan:", err);
     }
-  }
+  };
 
-  const handleDrop = async (targetDay, targetMeal) => {
-    if (!draggedRecipe) return;
-    const { recipe, sourceDay, sourceMeal } = draggedRecipe;
-    const newSlots = structuredClone(slots);
-    if (sourceDay && sourceMeal) newSlots[sourceDay][sourceMeal] = null;
-    newSlots[targetDay][targetMeal] = {
-      recipeId: recipe.recipeId || recipe.id,
-      title: recipe.title,
-    };
-    setSlots(newSlots);
-    await saveSlots(newSlots);
-    setDraggedRecipe(null);
+  const executeAdd = (recipeId, day, meal) => {
+    const newPlan = { ...mealPlan };
+    if (!newPlan[day]) newPlan[day] = {};
+    newPlan[day][meal] = recipeId;
+    setMealPlan(newPlan);
+    saveMealPlan(newPlan);
+    setMobileAddRecipe(null);
+    setReplaceConfirm(null);
+  };
+
+  const handleMobileSlotClick = (recipe, day, meal) => {
+    const existingRecipeId = mealPlan[day]?.[meal];
+    if (existingRecipeId) {
+      const existingRecipe = libraryRecipes[existingRecipeId];
+      setReplaceConfirm({
+        newRecipe: recipe,
+        existingTitle: existingRecipe?.title || "Existing Recipe",
+        day,
+        meal,
+      });
+    } else {
+      executeAdd(recipe.id, day, meal);
+    }
+  };
+
+  const handleDeleteFromSlot = (dayKey, mealType) => {
+    const newPlan = { ...mealPlan };
+    if (newPlan[dayKey]) {
+      delete newPlan[dayKey][mealType];
+      setMealPlan(newPlan);
+      saveMealPlan(newPlan);
+    }
+    setDeleteConfirm(null);
   };
 
   const handleDeleteFromLibrary = async (recipeId) => {
@@ -168,445 +143,383 @@ export default function WeeklyMealPlan() {
       await deleteDoc(
         doc(db, "users", currentUser.uid, "mealPlanRecipes", recipeId),
       );
-      setDeleteConfirm(null);
-    } catch (e) {
-      console.error("Error deleting recipe:", e);
-      alert("Failed to delete recipe from library.");
+      const newPlan = { ...mealPlan };
+      Object.keys(newPlan).forEach((day) => {
+        Object.keys(newPlan[day]).forEach((meal) => {
+          if (newPlan[day][meal] === recipeId) delete newPlan[day][meal];
+        });
+      });
+      setMealPlan(newPlan);
+      saveMealPlan(newPlan);
+    } catch (err) {
+      console.error(err);
     }
-  };
-
-  const handleDeleteFromSlot = async (day, mealKey) => {
-    const newSlots = structuredClone(slots);
-    newSlots[day][mealKey] = null;
-    setSlots(newSlots);
-    await saveSlots(newSlots);
     setDeleteConfirm(null);
   };
 
-  const handleMobileTapToAdd = async (day, mealKey) => {
-    if (!selectedRecipeForMobile) return;
+  const days = useMemo(() => {
+    return Array.from({ length: DAYS_TO_SHOW }, (_, i) =>
+      addDays(startDate, i),
+    );
+  }, [startDate]);
 
-    const newSlots = structuredClone(slots);
-    newSlots[day][mealKey] = {
-      recipeId: selectedRecipeForMobile.recipeId || selectedRecipeForMobile.id,
-      title: selectedRecipeForMobile.title,
-    };
-    setSlots(newSlots);
-    await saveSlots(newSlots);
-    setSelectedRecipeForMobile(null);
+  const getDailyTotals = (dayKey) => {
+    const dayData = mealPlan[dayKey] || {};
+    const totals = { protein: 0, carbs: 0, fat: 0 };
+    Object.values(dayData).forEach((recipeId) => {
+      const recipe = libraryRecipes[recipeId];
+      if (recipe && recipe.macros) {
+        totals.protein += Number(recipe.macros.protein || 0);
+        totals.carbs += Number(recipe.macros.carbs || 0);
+        totals.fat += Number(recipe.macros.fat || 0);
+      }
+    });
+    return totals;
   };
 
-  if (!currentUser)
+  if (loading)
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center text-text font-black uppercase">
-        Please Log In
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-brand"></div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-bg pb-20 text-text">
-      <div className="max-w-[1600px] mx-auto px-4 py-6">
+    <div className="min-h-screen bg-bg text-text p-4 md:p-8 pb-32">
+      <div className="mx-auto max-w-7xl">
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-black uppercase tracking-tight">
-              Meal Plan
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-10 bg-brand rounded-full" />
+            <h1 className="text-4xl font-black tracking-tighter uppercase">
+              Fuel <span className="text-brand">Schedule</span>
             </h1>
-            <div className="text-sm text-muted">
-              {fmt(startDate)} – {fmt(endDate)}
-            </div>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex items-center gap-2 bg-card border border-border p-2 rounded-2xl shadow-xl">
             <button
-              onClick={() => setStartDate(addDays(startDate, -7))}
-              className="p-2 rounded-xl border border-border bg-card hover:bg-bg transition-all"
+              onClick={() => setStartDate(addDays(startDate, -DAYS_TO_SHOW))}
+              className="p-3 hover:bg-white/5 rounded-xl transition-colors"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={24} />
+            </button>
+            <div className="px-6 text-center min-w-[180px]">
+              <div className="text-sm font-black uppercase">
+                {startDate.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}{" "}
+                -{" "}
+                {addDays(startDate, DAYS_TO_SHOW - 1).toLocaleDateString(
+                  "en-US",
+                  { month: "short", day: "numeric" },
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => setStartDate(addDays(startDate, DAYS_TO_SHOW))}
+              className="p-3 hover:bg-white/5 rounded-xl transition-colors"
+            >
+              <ChevronRight size={24} />
             </button>
             <button
-              onClick={() => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                setStartDate(today);
-              }}
-              className="px-4 py-2 rounded-xl border border-border bg-card font-bold text-sm hover:bg-bg transition-all"
+              onClick={() => setStartDate(new Date())}
+              className="p-3 hover:bg-white/5 rounded-xl text-brand"
             >
-              Today
-            </button>
-            <button
-              onClick={() => setStartDate(addDays(startDate, 7))}
-              className="p-2 rounded-xl border border-border bg-card hover:bg-bg transition-all"
-            >
-              <ChevronRight size={18} />
+              <RotateCcw size={24} />
             </button>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-[320px,1fr] gap-6">
-          {/* SIDEBAR - RECIPE LIBRARY */}
-          <div className="bg-card border border-border rounded-2xl p-4 h-fit max-h-[calc(100vh-200px)] overflow-y-auto">
-            <h3 className="text-xs font-black uppercase tracking-widest text-brand mb-4">
-              My Recipes ({availableRecipes.length})
-            </h3>
-            {selectedRecipeForMobile && (
-              <div className="mb-3 p-2 bg-brand/10 border border-brand/20 rounded-lg text-xs text-brand font-bold text-center">
-                Tap a meal slot to add: {selectedRecipeForMobile.title}
-              </div>
-            )}
-            <div className="space-y-2">
-              {availableRecipes.length === 0 ? (
-                <div className="text-sm text-muted text-center py-8">
-                  No recipes yet. Add recipes from the recipe viewer!
-                </div>
-              ) : (
-                availableRecipes.map((recipe) => (
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* LIBRARY PANEL */}
+          <div className="lg:col-span-1">
+            <div className="bg-card border border-border rounded-[2rem] p-6 shadow-xl sticky top-28">
+              <h2 className="text-base font-black uppercase tracking-widest mb-6 border-b border-border pb-4">
+                Fuel Library
+              </h2>
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                {Object.values(libraryRecipes).map((recipe) => (
                   <div
                     key={recipe.id}
                     draggable
-                    onDragStart={(e) => {
-                      setDraggedRecipe({ recipe });
-                      e.dataTransfer.effectAllowed = "move";
-                    }}
-                    onClick={() => {
-                      // On mobile, tap to select recipe
-                      if (window.innerWidth < 1024) {
-                        setSelectedRecipeForMobile(recipe);
-                      }
-                    }}
-                    className={`bg-bg border rounded-xl p-3 cursor-move hover:border-brand/40 transition-all group ${
-                      selectedRecipeForMobile?.id === recipe.id
-                        ? "border-brand bg-brand/5"
-                        : "border-border"
-                    }`}
+                    onDragStart={() => setDraggedRecipe(recipe)}
+                    className="group p-5 bg-bg border border-border rounded-2xl cursor-grab hover:border-brand/30 transition-all"
                   >
-                    <div className="flex items-center gap-2">
-                      <GripVertical
-                        size={16}
-                        className="text-muted group-hover:text-brand flex-shrink-0"
-                      />
-                      <span className="text-sm font-bold truncate flex-1">
+                    <div className="flex items-start justify-between gap-2 mb-4">
+                      <div className="text-sm font-black uppercase leading-tight">
                         {recipe.title}
-                      </span>
-                      <div className="flex items-center gap-1 flex-shrink-0">
+                      </div>
+                      <div className="flex gap-1 shrink-0">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/recipe/${recipe.recipeId}`);
-                          }}
-                          className="p-1.5 rounded-lg hover:bg-brand/10 text-muted hover:text-brand transition-all"
-                          title="View Recipe"
+                          onClick={() => navigate(`/recipe/${recipe.id}`)}
+                          className="p-2 text-muted hover:text-brand bg-white/5 rounded-lg"
                         >
-                          <Eye size={14} />
+                          <Eye size={16} />
                         </button>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteConfirm({
-                              type: "library",
-                              id: recipe.id,
-                            });
-                          }}
-                          className="p-1.5 rounded-lg hover:bg-danger/10 text-muted hover:text-danger transition-all"
-                          title="Remove from Library"
+                          onClick={() =>
+                            setDeleteConfirm({ type: "library", id: recipe.id })
+                          }
+                          className="p-2 text-muted hover:text-danger bg-white/5 rounded-lg"
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => setMobileAddRecipe(recipe)}
+                          className="p-2 text-brand bg-brand/10 rounded-lg lg:hidden"
+                        >
+                          <Plus size={16} />
                         </button>
                       </div>
                     </div>
+                    <div className="flex gap-3 text-[10px] font-black uppercase bg-white/5 p-2 rounded-xl justify-center">
+                      <span className="text-danger">
+                        P:{recipe.macros?.protein || 0}
+                      </span>
+                      <span className="text-blue-400">
+                        C:{recipe.macros?.carbs || 0}
+                      </span>
+                      <span className="text-yellow-400">
+                        F:{recipe.macros?.fat || 0}
+                      </span>
+                    </div>
                   </div>
-                ))
-              )}
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* CALENDAR GRID */}
-          <div className="bg-card border border-border rounded-2xl p-4">
-            {loading ? (
-              <div className="text-center py-20 text-muted font-bold uppercase tracking-widest">
-                Loading Plan...
-              </div>
-            ) : (
-              <>
-                {/* DESKTOP VIEW */}
-                <div className="hidden lg:block overflow-x-auto">
-                  <div className="min-w-[900px]">
-                    {/* Header Row: Dates */}
-                    <div className="grid grid-cols-7 gap-3 mb-4">
-                      {Array.from({ length: DAYS_TO_SHOW }).map((_, idx) => {
-                        const date = addDays(startDate, idx);
-                        const isToday =
-                          date.toDateString() === new Date().toDateString();
-                        const dayLabel = getDayLabel(date);
+          {/* SCHEDULE PANEL */}
+          <div className="lg:col-span-3">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {days.map((day) => {
+                const dayKey = getDayKey(day);
+                const isToday = dayKey === getDayKey(new Date());
+                const totals = getDailyTotals(dayKey);
+                return (
+                  <div key={dayKey} className="space-y-4">
+                    <div
+                      className={`p-6 rounded-[2rem] border text-center ${isToday ? "bg-brand/10 border-brand shadow-lg" : "bg-card border-border"}`}
+                    >
+                      <div className="text-xs font-black uppercase tracking-widest text-muted mb-1">
+                        {getDayLabel(day)}
+                      </div>
+                      <div className="text-3xl font-black tracking-tighter mb-3">
+                        {day.getDate()}
+                      </div>
+                      <div className="flex items-center justify-center gap-3 py-2 px-3 bg-black/40 rounded-full border border-white/10">
+                        <div className="flex flex-col">
+                          <span className="text-[9px] text-danger font-black">
+                            P
+                          </span>
+                          <span className="text-xs font-black">
+                            {Math.round(totals.protein)}
+                          </span>
+                        </div>
+                        <div className="w-px h-6 bg-white/10" />
+                        <div className="flex flex-col">
+                          <span className="text-[9px] text-blue-400 font-black">
+                            C
+                          </span>
+                          <span className="text-xs font-black">
+                            {Math.round(totals.carbs)}
+                          </span>
+                        </div>
+                        <div className="w-px h-6 bg-white/10" />
+                        <div className="flex flex-col">
+                          <span className="text-[9px] text-yellow-400 font-black">
+                            F
+                          </span>
+                          <span className="text-xs font-black">
+                            {Math.round(totals.fat)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
+                    <div className="space-y-4">
+                      {MEALS.map((mealKey) => {
+                        const recipeId = mealPlan[dayKey]?.[mealKey];
+                        const recipe = recipeId
+                          ? libraryRecipes[recipeId]
+                          : null;
                         return (
                           <div
-                            key={`day-${idx}`}
-                            className={`text-center p-3 rounded-xl border ${isToday ? "bg-brand/10 border-brand/40" : "bg-bg border-border"}`}
+                            key={mealKey}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={() => handleDrop(dayKey, mealKey)}
+                            className={`relative min-h-[130px] rounded-[1.5rem] border-2 border-dashed p-4 ${recipe ? "bg-card border-border shadow-md" : "bg-bg/50 border-white/5"}`}
                           >
-                            <div
-                              className={`font-black text-sm ${isToday ? "text-brand" : ""}`}
-                            >
-                              {dayLabel}
+                            <div className="text-[10px] font-black uppercase text-muted/50 mb-3">
+                              {mealKey.replace(/\d/g, "").trim()}
                             </div>
-                            <div className="text-xs text-muted">
-                              {fmt(date)}
-                            </div>
+                            {recipe ? (
+                              <div className="space-y-4">
+                                <div className="text-xs font-black uppercase leading-tight line-clamp-3">
+                                  {recipe.title}
+                                </div>
+                                <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                                  <button
+                                    onClick={() =>
+                                      navigate(`/recipe/${recipe.id}`)
+                                    }
+                                    className="text-muted hover:text-brand"
+                                  >
+                                    <Eye size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      setDeleteConfirm({
+                                        type: "slot",
+                                        day: dayKey,
+                                        meal: mealKey,
+                                      })
+                                    }
+                                    className="text-muted hover:text-danger"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="absolute inset-0 flex items-center justify-center opacity-5">
+                                <Plus size={32} />
+                              </div>
+                            )}
                           </div>
                         );
                       })}
                     </div>
-
-                    {/* Meal Rows */}
-                    <div className="grid grid-cols-7 gap-3">
-                      {MEALS.map((mealType, mIdx) => (
-                        <React.Fragment key={`${mealType}-${mIdx}`}>
-                          {Array.from({ length: DAYS_TO_SHOW }).map(
-                            (_, dayIdx) => {
-                              const dayKey = `day_${dayIdx}`;
-                              const mealKey = `${mealType}_${mIdx}`;
-                              const cell = slots[dayKey]?.[mealKey];
-
-                              return (
-                                <div
-                                  key={`${dayKey}-${mealKey}`}
-                                  onDragOver={(e) => e.preventDefault()}
-                                  onDrop={() => handleDrop(dayKey, mealKey)}
-                                  className={`min-h-[110px] rounded-xl border-2 border-dashed p-2 transition-all ${
-                                    cell
-                                      ? "bg-brand/5 border-brand/20"
-                                      : "bg-bg/50 border-border hover:border-brand/30"
-                                  }`}
-                                >
-                                  <div className="text-[10px] font-black uppercase text-muted mb-2 tracking-tighter">
-                                    {mealType}
-                                  </div>
-                                  {cell ? (
-                                    <div
-                                      draggable
-                                      onDragStart={(e) => {
-                                        setDraggedRecipe({
-                                          recipe: cell,
-                                          sourceDay: dayKey,
-                                          sourceMeal: mealKey,
-                                        });
-                                        e.dataTransfer.effectAllowed = "move";
-                                      }}
-                                      className="bg-card border border-brand/20 rounded-lg p-2 h-[70px] flex flex-col justify-between cursor-move shadow-sm hover:shadow-md transition-all"
-                                    >
-                                      <div className="text-xs font-bold truncate mb-2">
-                                        {cell.title}
-                                      </div>
-                                      <div className="flex items-center gap-1 justify-end">
-                                        <button
-                                          onClick={() =>
-                                            navigate(`/recipe/${cell.recipeId}`)
-                                          }
-                                          className="p-1 rounded-md hover:bg-brand/10 text-muted hover:text-brand transition-all"
-                                          title="View Recipe"
-                                        >
-                                          <Eye size={12} />
-                                        </button>
-                                        <button
-                                          onClick={() =>
-                                            setDeleteConfirm({
-                                              type: "slot",
-                                              day: dayKey,
-                                              meal: mealKey,
-                                            })
-                                          }
-                                          className="p-1 rounded-md hover:bg-danger/10 text-muted hover:text-danger transition-all"
-                                          title="Remove from Slot"
-                                        >
-                                          <Trash2 size={12} />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="h-[70px] flex items-center justify-center text-xs text-muted/50">
-                                      Drop here
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            },
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </div>
                   </div>
-                </div>
-
-                {/* MOBILE VIEW */}
-                <div className="lg:hidden space-y-6">
-                  {Array.from({ length: DAYS_TO_SHOW }).map((_, dayIdx) => {
-                    const date = addDays(startDate, dayIdx);
-                    const isToday =
-                      date.toDateString() === new Date().toDateString();
-                    const dayLabel = getDayLabel(date);
-                    const dayKey = `day_${dayIdx}`;
-
-                    return (
-                      <div
-                        key={dayKey}
-                        className="bg-bg rounded-2xl border border-border overflow-hidden"
-                      >
-                        {/* Day Header */}
-                        <div
-                          className={`p-4 border-b border-border ${isToday ? "bg-brand/10" : "bg-card"}`}
-                        >
-                          <div
-                            className={`font-black text-lg ${isToday ? "text-brand" : "text-text"}`}
-                          >
-                            {dayLabel}
-                          </div>
-                          <div className="text-xs text-muted">{fmt(date)}</div>
-                        </div>
-
-                        {/* Meals for this day */}
-                        <div className="p-4 space-y-3">
-                          {MEALS.map((mealType, mIdx) => {
-                            const mealKey = `${mealType}_${mIdx}`;
-                            const cell = slots[dayKey]?.[mealKey];
-
-                            return (
-                              <div key={mealKey}>
-                                <div className="text-[10px] font-black uppercase text-muted mb-2 tracking-wider">
-                                  {mealType}
-                                </div>
-                                <div
-                                  onDragOver={(e) => e.preventDefault()}
-                                  onDrop={() => handleDrop(dayKey, mealKey)}
-                                  onClick={() => {
-                                    // On mobile, tap empty slot to add selected recipe
-                                    if (!cell && selectedRecipeForMobile) {
-                                      handleMobileTapToAdd(dayKey, mealKey);
-                                    }
-                                  }}
-                                  className={`min-h-[80px] rounded-xl border-2 border-dashed p-3 transition-all ${
-                                    cell
-                                      ? "bg-brand/5 border-brand/20"
-                                      : selectedRecipeForMobile
-                                        ? "bg-brand/10 border-brand cursor-pointer hover:bg-brand/20"
-                                        : "bg-card border-border"
-                                  }`}
-                                >
-                                  {cell ? (
-                                    <div
-                                      draggable
-                                      onDragStart={(e) => {
-                                        setDraggedRecipe({
-                                          recipe: cell,
-                                          sourceDay: dayKey,
-                                          sourceMeal: mealKey,
-                                        });
-                                        e.dataTransfer.effectAllowed = "move";
-                                      }}
-                                      className="bg-card border border-brand/20 rounded-lg p-3 cursor-move shadow-sm"
-                                    >
-                                      <div className="flex items-start justify-between gap-2">
-                                        <div className="text-sm font-bold flex-1">
-                                          {cell.title}
-                                        </div>
-                                        <div className="flex items-center gap-1 flex-shrink-0">
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              navigate(
-                                                `/recipe/${cell.recipeId}`,
-                                              );
-                                            }}
-                                            className="p-1.5 rounded-lg hover:bg-brand/10 text-muted hover:text-brand transition-all"
-                                            title="View Recipe"
-                                          >
-                                            <Eye size={14} />
-                                          </button>
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setDeleteConfirm({
-                                                type: "slot",
-                                                day: dayKey,
-                                                meal: mealKey,
-                                              });
-                                            }}
-                                            className="p-1.5 rounded-lg hover:bg-danger/10 text-muted hover:text-danger transition-all"
-                                            title="Remove"
-                                          >
-                                            <Trash2 size={14} />
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="h-[50px] flex items-center justify-center text-xs text-muted/50">
-                                      {selectedRecipeForMobile
-                                        ? "Tap to add recipe"
-                                        : "Select a recipe first"}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
+                );
+              })}
+            </div>
           </div>
-        </div>
-
-        {/* HELP TEXT */}
-        <div className="mt-6 text-xs text-muted bg-card border border-border rounded-xl p-4">
-          <p className="mb-2">
-            <span className="font-bold text-brand">How to use:</span>
-          </p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>Add recipes from the recipe viewer using "Add to Meal Plan"</li>
-            <li className="hidden lg:list-item">
-              Drag recipes from the sidebar to any day and meal slot
-            </li>
-            <li className="lg:hidden">
-              Tap a recipe in the sidebar to select it, then tap an empty meal
-              slot to add it
-            </li>
-            <li>Click the eye icon to view the recipe details</li>
-            <li>Use the same recipe multiple times in different slots</li>
-            <li>Navigate weeks using the arrow buttons</li>
-          </ul>
         </div>
       </div>
 
-      {/* DELETE CONFIRMATION MODAL */}
+      {/* MOBILE ADD MODAL */}
+      {mobileAddRecipe && !replaceConfirm && (
+        <div className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-md flex justify-center items-start pt-6 px-4 overflow-y-auto">
+          <div className="bg-card border border-border w-full max-w-md rounded-[2.5rem] p-8 mb-12 shadow-2xl animate-in slide-in-from-top duration-300">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-black uppercase tracking-tight">
+                Add <span className="text-brand">{mobileAddRecipe.title}</span>
+              </h2>
+              <button
+                onClick={() => setMobileAddRecipe(null)}
+                className="p-3 bg-white/10 rounded-full"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="space-y-8">
+              {days.map((day) => (
+                <div key={getDayKey(day)} className="space-y-3">
+                  <div className="text-sm font-black uppercase text-brand bg-brand/10 p-3 rounded-xl text-center tracking-widest">
+                    {getDayLabel(day)} {day.getDate()}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {MEALS.map((m) => {
+                      const isOccupied = !!mealPlan[getDayKey(day)]?.[m];
+                      return (
+                        <button
+                          key={m}
+                          onClick={() =>
+                            handleMobileSlotClick(
+                              mobileAddRecipe,
+                              getDayKey(day),
+                              m,
+                            )
+                          }
+                          className={`p-5 text-xs font-black uppercase border-2 rounded-2xl flex justify-between items-center ${isOccupied ? "bg-white/5 border-white/5 text-muted/40" : "bg-bg border-border"}`}
+                        >
+                          {m.replace(/\d/g, "").trim()}
+                          {isOccupied ? (
+                            <Check size={16} className="text-brand/50" />
+                          ) : (
+                            <Plus size={16} className="text-brand" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REPLACE CONFIRMATION */}
+      {replaceConfirm && (
+        <div className="fixed inset-0 z-[130] bg-black/95 flex items-center justify-center px-4">
+          <div className="bg-card border border-border p-8 rounded-[2rem] max-w-sm w-full text-center space-y-6">
+            <h2 className="text-xl font-black uppercase">Replace Meal?</h2>
+            <p className="text-sm text-muted">
+              Replace{" "}
+              <span className="text-text font-bold">
+                "{replaceConfirm.existingTitle}"
+              </span>{" "}
+              with{" "}
+              <span className="text-brand font-bold">
+                "{replaceConfirm.newRecipe.title}"
+              </span>
+              ?
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() =>
+                  executeAdd(
+                    replaceConfirm.newRecipe.id,
+                    replaceConfirm.day,
+                    replaceConfirm.meal,
+                  )
+                }
+                className="w-full py-4 bg-brand text-white rounded-xl font-black uppercase text-xs"
+              >
+                Yes, Replace
+              </button>
+              <button
+                onClick={() => setReplaceConfirm(null)}
+                className="w-full py-4 bg-white/5 text-muted rounded-xl font-black uppercase text-xs"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center px-4">
-          <div className="bg-card border border-border p-8 rounded-[var(--radius-lg)] max-w-sm w-full text-center">
+        <div className="fixed inset-0 z-[120] bg-black/90 flex items-center justify-center px-4">
+          <div className="bg-card border border-border p-8 rounded-[2rem] max-w-sm w-full text-center">
             <h2 className="text-xl font-black uppercase mb-4">
               Confirm Delete
             </h2>
             <p className="text-sm text-muted mb-6">
-              {deleteConfirm.type === "library"
-                ? "Remove this recipe from your meal plan library? It will be removed from all scheduled meals."
-                : "Remove this recipe from this meal slot?"}
+              Remove from{" "}
+              {deleteConfirm.type === "library" ? "library" : "slot"}?
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 py-3 border border-border rounded-full font-black uppercase text-sm"
+                className="flex-1 py-3 border border-border rounded-full font-black uppercase text-xs"
               >
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  if (deleteConfirm.type === "library") {
-                    handleDeleteFromLibrary(deleteConfirm.id);
-                  } else {
-                    handleDeleteFromSlot(deleteConfirm.day, deleteConfirm.meal);
-                  }
-                }}
-                className="flex-1 py-3 bg-danger text-white rounded-full font-black uppercase text-sm"
+                onClick={() =>
+                  deleteConfirm.type === "library"
+                    ? handleDeleteFromLibrary(deleteConfirm.id)
+                    : handleDeleteFromSlot(
+                        deleteConfirm.day,
+                        deleteConfirm.meal,
+                      )
+                }
+                className="flex-1 py-3 bg-danger text-white rounded-full font-black uppercase text-xs"
               >
                 Delete
               </button>
