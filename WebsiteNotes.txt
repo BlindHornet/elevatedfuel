@@ -1,0 +1,77 @@
+Appetizer
+Soups
+Sauces
+Salads
+Desserts
+Bread
+Ground Beef
+Chicken
+Steak
+Fish
+Kid Friendly
+Cold
+Hot
+Under x Time
+
+https://www.eatingwell.com/recipes/
+https://www.bfamcooking.com/recipes/the-secret-to-perfectly-crispy-pan-seared-chicken
+
+INSTA: https://www.instagram.com/reel/DUZow2Fjah6/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ==
+TIKTOK: https://www.tiktok.com/@jilliangottlieb/video/7602317239970319646?is_from_webapp=1&sender_device=pc
+YOUTUBE: https://youtu.be/JO12OfAnH3M?si=0O2VEJT9lOwxclRB
+RECIPES: https://www.allrecipes.com/recipe/254895/homemade-spinach-pasta/
+
++-------------------+
+    User Login
++-------------------+
++Admin
+--Approve Pending Recipes
+
++General User
+--Submit Recipes
+--Weekly Meal Plan
+--Favorites
+--Shopping Cart
+
++-------------------+
+    Home Page
++-------------------+
++Navigation
+-Shopping List
+-Donate to Developer
+-Make a Suggestion
+-Suggested Items (Amazon Links)
+-Settings
+-Logout
+
++-------------------+
+    Search Filter
++-------------------+
+
+
++-------------------+
+    Add Recipe
++-------------------+
+
+
++-------------------+
+    Recipe Card
++-------------------+
+-Image Needs to Show
+
++-------------------------+
+    Recipe Card View 
++-------------------------+
+-If URL (http/https) show Link Image (Add View Video)
+
++-------------------------+
+    Shopping List
++-------------------------+
+-Show Ingredients
+
++-------------------------+
+   Meal Plan
++-------------------------+
+Under Date Summarize the P/C/F for the serving siZe
+
+

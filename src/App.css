@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* ===== Brand palette (edit these to match your brand) ===== */
+:root {
+  --brand-50: #eff6ff;
+  --brand-100: #dbeafe;
+  --brand-200: #bfdbfe;
+  --brand-300: #93c5fd;
+  --brand-400: #60a5fa;
+  --brand-500: #3b82f6; /* primary */
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --brand-800: #1e40af;
+  --brand-900: #1e3a8a;
+
+  --bg: #0b1220; /* page background */
+  --card: #0f1a2e; /* surface */
+  --border: rgba(255, 255, 255, 0.1);
+
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.7);
+  --danger: #ef4444;
+}
+
+/* ===== Tailwind v4 theme mapping ===== */
+@theme {
+  --color-brand: var(--brand-500);
+  --color-brand-foreground: white;
+
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-border: var(--border);
+
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-danger: var(--danger);
+
+  /* optional: nicer defaults */
+  --radius-lg: 16px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
