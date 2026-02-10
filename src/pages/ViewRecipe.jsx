@@ -13,6 +13,7 @@ import {
   Tag,
   Save,
   CalendarCheck,
+  ShoppingCart,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -90,6 +91,7 @@ export default function ViewRecipe() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [showMealPlanSuccess, setShowMealPlanSuccess] = useState(false);
+  const [showShopCartSuccess, setShowShopCartSuccess] = useState(false);
   const [recipe, setRecipe] = useState(null);
   const [comments, setComments] = useState([]);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -183,6 +185,78 @@ export default function ViewRecipe() {
       }
     } catch (err) {
       console.error("Favorite Error:", err);
+    }
+  };
+
+  const handleAddToShoppingList = async () => {
+    if (!auth.currentUser) {
+      alert("Please log in to use the shopping list.");
+      return;
+    }
+    if (!recipe?.ingredients?.length) return;
+
+    try {
+      const uid = auth.currentUser.uid;
+      const listDocRef = doc(db, "users", uid, "shoppingList", "current");
+
+      // 1) Read existing list
+      const snap = await getDoc(listDocRef);
+      const existingItems = snap.exists() ? snap.data().items || [] : [];
+
+      // 2) Convert recipe ingredients into ShoppingList item shape
+      const incoming = recipe.ingredients
+        .map((ing) => {
+          const name = (ing.item || ing.name || "").trim();
+          const unit = (ing.unit || "").trim();
+          const quantity = Number(ing.qty) || 0;
+
+          if (!name) return null;
+
+          return {
+            id: crypto.randomUUID(),
+            name,
+            unit,
+            quantity,
+            checked: false,
+          };
+        })
+        .filter(Boolean);
+
+      // 3) Merge + de-dupe (same name+unit => sum quantities)
+      const mergedMap = new Map();
+
+      // load existing
+      for (const item of existingItems) {
+        const key = `${(item.name || "").toLowerCase()}|${(item.unit || "").toLowerCase()}`;
+        mergedMap.set(key, { ...item });
+      }
+
+      // merge incoming
+      for (const item of incoming) {
+        const key = `${item.name.toLowerCase()}|${item.unit.toLowerCase()}`;
+
+        if (mergedMap.has(key)) {
+          const prev = mergedMap.get(key);
+          mergedMap.set(key, {
+            ...prev,
+            quantity: Number(prev.quantity || 0) + Number(item.quantity || 0),
+          });
+        } else {
+          mergedMap.set(key, item);
+        }
+      }
+
+      const mergedItems = Array.from(mergedMap.values());
+
+      // 4) Write back to the exact doc ShoppingList listens to
+      await setDoc(listDocRef, { items: mergedItems }, { merge: true });
+
+      setShowShopCartSuccess(true);
+      //alert("Added ingredients to your shopping list!");
+      //navigate("/shopping-list");
+    } catch (err) {
+      console.error("Shopping List Error:", err);
+      alert("Failed to add to shopping list.");
     }
   };
 
@@ -603,30 +677,38 @@ export default function ViewRecipe() {
                 >
                   Add to Meal Plan
                 </button>
-                <button
-                  onClick={() => {
-                    if (!currentUser) return alert("Please log in to review.");
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleAddToShoppingList}
+                    className="flex items-center justify-center gap-2 w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-white/10 hover:text-white transition-all"
+                  >
+                    <ShoppingCart size={18} />
+                    Shopping List
+                  </button>
 
-                    // Check if user already has a review
-                    const existingReview = comments.find(
-                      (c) => c.userId === currentUser.uid,
-                    );
-
-                    if (existingReview) {
-                      setEditingCommentId(existingReview.id);
-                      setUserRating(existingReview.rating);
-                      setUserComment(existingReview.comment);
-                    } else {
-                      setEditingCommentId(null);
-                      setUserRating(5);
-                      setUserComment("");
-                    }
-                    setShowReviewModal(true);
-                  }}
-                  className="w-full py-4 rounded-full border-2 border-brand text-brand font-black uppercase flex items-center justify-center gap-2"
-                >
-                  <CheckCircle size={18} /> I Made This
-                </button>
+                  <button
+                    onClick={() => {
+                      if (!currentUser)
+                        return alert("Please log in to review.");
+                      const existingReview = comments.find(
+                        (c) => c.userId === currentUser.uid,
+                      );
+                      if (existingReview) {
+                        setEditingCommentId(existingReview.id);
+                        setUserRating(existingReview.rating);
+                        setUserComment(existingReview.comment);
+                      } else {
+                        setEditingCommentId(null);
+                        setUserRating(5);
+                        setUserComment("");
+                      }
+                      setShowReviewModal(true);
+                    }}
+                    className="w-full py-4 rounded-2xl border border-brand/60 text-brand font-black uppercase flex items-center justify-center gap-2 text-[10px] tracking-widest hover:bg-brand/10 transition-colors"
+                  >
+                    <CheckCircle size={18} /> I Made This
+                  </button>
+                </div>
               </div>
             </div>
           </aside>
@@ -634,6 +716,41 @@ export default function ViewRecipe() {
       </main>
 
       {/* MODALS */}
+      {showShopCartSuccess && (
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center px-4">
+          <div className="bg-card border border-border p-8 rounded-[var(--radius-lg)] max-w-md w-full text-center space-y-6">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center">
+              <CalendarCheck className="text-brand" size={32} />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black uppercase tracking-tight">
+                Fuel Ingredients Added!
+              </h2>
+              <p className="text-muted leading-relaxed">
+                Ingredients successfully added to your shopping cart. Ready to
+                view?
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => navigate("/shopping-list")}
+                className="w-full py-4 bg-brand text-white rounded-full font-black uppercase tracking-widest shadow-lg"
+              >
+                Go to Shopping List
+              </button>
+              <button
+                onClick={() => setShowShopCartSuccess(false)}
+                className="w-full py-4 border border-border rounded-full font-black uppercase tracking-widest text-muted hover:text-text transition-colors"
+              >
+                Keep Browsing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showMealPlanSuccess && (
         <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center px-4">
           <div className="bg-card border border-border p-8 rounded-[var(--radius-lg)] max-w-md w-full text-center space-y-6">

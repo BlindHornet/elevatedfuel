@@ -16,6 +16,7 @@ import EditRecipe from "./pages/EditRecipe";
 import AddRecipe from "./pages/AddRecipe";
 import WeeklyMealPlan from "./pages/WeeklyMealPlan";
 import Storefront from "./pages/Storefront";
+import ShoppingList from "./pages/ShoppingList";
 
 export default function App() {
   return (
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/weekly-meal-plan" element={<WeeklyMealPlan />} />
         <Route path="/recommendations" element={<Storefront />} />
+        <Route path="/shopping-list" element={<ShoppingList />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

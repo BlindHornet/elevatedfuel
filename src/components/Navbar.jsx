@@ -9,7 +9,8 @@ import {
   Sparkles,
   UserCircle,
   Settings,
-  AlertCircle, // Added for the modal icon
+  AlertCircle,
+  ShoppingCart,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -58,6 +59,7 @@ export default function Navbar() {
 
   const navItems = [
     { label: "Recipes", path: "/", icon: UtensilsCrossed },
+    { label: "Shopping List", path: "/shopping-list", icon: ShoppingCart },
     { label: "Favorites", path: "/favorites", icon: Heart },
     { label: "Meal Plan", path: "/weekly-meal-plan", icon: CalendarDays },
   ];
@@ -72,6 +74,24 @@ export default function Navbar() {
   const NavButton = ({ item, isMobile = false }) => {
     const isActive = location.pathname === item.path;
     const Icon = item.icon;
+    const mobileStyles = isActive
+      ? "bg-brand text-white shadow-lg shadow-brand/20"
+      : "bg-white/5 border border-white/10 text-muted";
+
+    if (isMobile) {
+      return (
+        <button
+          onClick={() => {
+            navigate(item.path);
+            setMobileNavOpen(false);
+          }}
+          className={`flex flex-row items-center justify-start gap-4 px-5 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all duration-300 ${mobileStyles}`}
+        >
+          <item.icon size={18} />
+          <span>{item.label}</span>
+        </button>
+      );
+    }
 
     return (
       <button
@@ -162,35 +182,39 @@ export default function Navbar() {
           </div>
         </div>
 
+        {/* Mobile Navigation Dropdown */}
         <div
-          className={`md:hidden overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] bg-card/95 backdrop-blur-2xl ${
-            mobileNavOpen ? "max-h-[500px] border-t border-border" : "max-h-0"
+          className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out bg-bg border-t border-border ${
+            mobileNavOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
-          <div className="p-6">
-            <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="p-4 space-y-3">
+            {/* Grid of 2 for main items, but shorter height */}
+            <div className="grid grid-cols-2 gap-2">
               {navItems.map((item) => (
                 <NavButton key={item.path} item={item} isMobile />
               ))}
-              {/* Mobile Settings Button */}
+
+              {/* Mobile Settings Button - matching the new slim row style */}
               <button
                 onClick={handleSettingsClick}
-                className="flex flex-col items-center justify-center gap-2 uppercase tracking-[0.15em] aspect-square rounded-2xl font-black text-[10px] border border-white/5 bg-white/5 text-muted hover:text-text transition-all duration-300"
+                className="flex flex-row items-center justify-start gap-4 px-5 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest border border-white/5 bg-white/5 text-muted hover:text-text transition-all"
               >
-                <UserCircle size={24} className="mb-0.5" />
+                <UserCircle size={18} />
                 Settings
               </button>
             </div>
 
+            {/* Primary Action Button - Slimmed down */}
             <button
               onClick={() => {
                 navigate("/add-recipe");
                 setMobileNavOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl bg-brand text-white font-black text-sm uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-brand text-white font-black text-xs uppercase tracking-[0.2em] shadow-lg active:scale-[0.98] transition-all mt-2"
             >
-              <Plus size={20} strokeWidth={3} />
-              <span>Add New Recipe</span>
+              <Plus size={18} strokeWidth={3} />
+              <span>Add Recipe</span>
             </button>
           </div>
         </div>
