@@ -30,6 +30,7 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
    - Delete From Favorites
 7. Meal Planner
    - Drag Recipes To Respective Day / Slot (Breakfast, Snacks, Lunch, Dinner, Dessert)
+   - Sums up P/C/F for day
    - Quick View of Recipe
    - Delete From Meal Plan Day / All Together
 
@@ -51,8 +52,6 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
    - Add custom image for card
 5. View Recipe
    - Add Ingredients To Shopping List
-6. Meal Plan
-   - Under Date, summarize the P/C/F for all meals for that day
 
 # Contributing
 
