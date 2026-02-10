@@ -18,15 +18,17 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
    - Filter on Tags
    - Filter on Macros (Calories, Proteins, Carbs, Fats)
    - Shows Avg User Rating and Admin Rating
-3. Add Recipes
+3. Recipe Card
+   - Highlights total cooking time, servings, macros and if link provided quick view option
+4. Add Recipes
    - Give Personal Rating / Feedback if Made
-4. View Recipe
+5. View Recipe
    - View Direct Link of Source
    - Add To Meal Plan
    - Add To Favorites
-5. Favorites
+6. Favorites
    - Delete From Favorites
-6. Meal Planner
+7. Meal Planner
    - Drag Recipes To Respective Day / Slot (Breakfast, Snacks, Lunch, Dinner, Dessert)
    - Quick View of Recipe
    - Delete From Meal Plan Day / All Together
@@ -46,14 +48,12 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
      - Make a Suggestion
 4. Advanced Filter
    - Better UI/UX For Advanced Filter
-5. Recipe Cards
-   - If a link is provided on the recipe, show a 'Eye' icon that they can click on that will take them straight to the link on the recipe card rather than having to go inside the recipe to see if they want to try it
-6. Add Recipe
+5. Add Recipe
    - If link provided, try to scrape directions and ingredients
    - Add custom image for card
-7. View Recipe
+6. View Recipe
    - Add Ingredients To Shopping List
-8. Meal Plan
+7. Meal Plan
    - Under Date, summarize the P/C/F for all meals for that day
 
 # Contributing

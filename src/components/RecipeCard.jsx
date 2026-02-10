@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/preserve-manual-memoization */
 // Module Imports
 import React, { useState, useEffect, useMemo } from "react";
-import { Star, Clock, Users } from "lucide-react";
+import { Star, Clock, Users, View } from "lucide-react";
 import { Link } from "react-router-dom";
 
 // Firebase Imports
@@ -46,6 +47,7 @@ const toNumber = (v) => {
 export default function RecipeCard({ recipe }) {
   const [comments, setComments] = useState([]);
   const [imageError, setImageError] = useState(false);
+  const externalLink = recipe?.["url-link"] || recipe?.mediaUrl;
   const calories = recipe?.macros?.calories;
   const adminRating = recipe?.adminReviewScore || recipe?.adminRating || 0; // Admin review score
   const prep = recipe?.prepMinutes;
@@ -76,16 +78,21 @@ export default function RecipeCard({ recipe }) {
     return sum / comments.length;
   }, [comments, recipe?.avgUserRating]);
 
+  const handleExternalClick = (e) => {
+    e.preventDefault(); // Prevents navigating to the internal recipe page
+    e.stopPropagation(); // Prevents bubbling to the Link component
+    window.open(externalLink, "_blank", "noopener,noreferrer");
+  };
+
   const hasImage = recipe.image && recipe.image.trim() !== "";
-  const showNoImageText = !hasImage || imageError;
 
   return (
     <Link
       to={`/recipe/${recipe.id}`}
-      className="group w-full block overflow-hidden rounded-[var(--radius-lg)] bg-card border border-border text-left transition-all duration-300 hover:border-brand/30 hover:shadow-[0_0_20px_rgba(16,185,129,0.05)]"
+      className="group w-full block overflow-hidden rounded-(--radius-lg) bg-card border border-border text-left transition-all duration-300 hover:border-brand/30 hover:shadow-[0_0_20px_rgba(16,185,129,0.05)]"
     >
       {/* IMAGE AREA */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5">
+      <div className="relative aspect-16/10 w-full overflow-hidden bg-white/5">
         {hasImage && !imageError ? (
           <img
             src={recipe.image.trim()}
@@ -94,7 +101,7 @@ export default function RecipeCard({ recipe }) {
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 flex items-start justify-center  pt-12 bg-gradient-to-br from-bg to-card">
+          <div className="absolute inset-0 flex items-start justify-center pt-12 bg-linear-to-br from-bg to-card">
             <span className="text-2xl font-black uppercase tracking-widest text-muted/30 ">
               No Image
             </span>
@@ -149,60 +156,59 @@ export default function RecipeCard({ recipe }) {
       {/* CONTENT AREA */}
       <div className="p-5 space-y-4">
         <div className="space-y-1">
-          {/* TITLE */}
-          <div className="text-base font-bold tracking-tight text-text line-clamp-2 group-hover:text-brand transition-colors">
-            {recipe.title}
+          {/* TITLE & EXTERNAL LINK */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="text-base font-bold tracking-tight text-text line-clamp-2 group-hover:text-brand transition-colors">
+              {recipe.title}
+            </div>
+
+            {/* Conditional Eyeball/External Link Icon */}
+            {externalLink && (
+              <button
+                onClick={handleExternalClick}
+                className="mt-0.5 shrink-0 p-1 rounded-md hover:bg-brand/10 text-muted hover:text-brand transition-colors"
+                title="View Original Source"
+              >
+                <View size={16} />
+              </button>
+            )}
           </div>
 
-          {/* TAGS (Preview) */}
-          {recipe.tags && recipe.tags.length > 0 && (
+          {/* INFO ROW */}
+          <div className="flex items-center gap-4 border-t border-border/50 pt-4">
+            {(prep != null || cook != null) && (
+              <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-muted">
+                <Clock className="h-3.5 w-3.5 text-brand" />
+                <span>{Number(prep || 0) + Number(cook || 0)} MIN</span>
+              </div>
+            )}
+            {recipe.servings && (
+              <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-muted">
+                <Users className="h-3.5 w-3.5 text-brand" />
+                <span>{recipe.servings} SERVING(S)</span>
+              </div>
+            )}
+          </div>
+
+          {/* MACROS & CALORIES ROW */}
+          <div className="flex items-center justify-between">
             <div className="flex flex-wrap gap-2">
-              {recipe.tags.map((tag, index) => (
-                <div
-                  key={index}
-                  className="text-[9px] font-black uppercase tracking-widest text-brand/60 bg-brand/5 px-1.5 py-0.5 rounded"
-                >
-                  {tag}
+              <MacroBadge label="P" value={recipe?.macros?.protein} />
+              <MacroBadge label="C" value={recipe?.macros?.carbs} />
+              <MacroBadge label="F" value={recipe?.macros?.fat} />
+            </div>
+
+            {calories != null && (
+              <div className="text-right">
+                <div className="text-[10px] font-black text-muted uppercase tracking-tighter">
+                  Calories
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* INFO ROW */}
-        <div className="flex items-center gap-4 border-t border-border/50 pt-4">
-          {(prep != null || cook != null) && (
-            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-muted">
-              <Clock className="h-3.5 w-3.5 text-brand" />
-              <span>{Number(prep || 0) + Number(cook || 0)} MIN</span>
-            </div>
-          )}
-          {recipe.servings && (
-            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-muted">
-              <Users className="h-3.5 w-3.5 text-brand" />
-              <span>{recipe.servings} SERVING(S)</span>
-            </div>
-          )}
-        </div>
-
-        {/* MACROS & CALORIES ROW */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-wrap gap-2">
-            <MacroBadge label="P" value={recipe?.macros?.protein} />
-            <MacroBadge label="C" value={recipe?.macros?.carbs} />
-            <MacroBadge label="F" value={recipe?.macros?.fat} />
+                <div className="text-sm font-black text-text leading-none">
+                  {calories}
+                </div>
+              </div>
+            )}
           </div>
-
-          {calories != null && (
-            <div className="text-right">
-              <div className="text-[10px] font-black text-muted uppercase tracking-tighter">
-                Calories
-              </div>
-              <div className="text-sm font-black text-text leading-none">
-                {calories}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </Link>
