@@ -1,4 +1,3 @@
-// Module Imports
 import React, { useState } from "react";
 import {
   Menu,
@@ -8,171 +7,200 @@ import {
   Heart,
   UtensilsCrossed,
   Sparkles,
+  UserCircle,
+  Settings,
+  AlertCircle, // Added for the modal icon
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-export default function Navbar({ onSelectPage, activePage }) {
+// Modal Component for "Not Yet Implemented"
+function ImplementationModal({ isOpen, onClose }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="w-full max-w-sm overflow-hidden rounded-[2rem] bg-card border border-border shadow-2xl animate-in zoom-in-95 duration-300">
+        <div className="p-8 text-center space-y-6">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center">
+            <AlertCircle className="text-brand" size={32} />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-xl font-black tracking-tight text-text uppercase">
+              Coming Soon
+            </h3>
+            <p className="text-sm text-muted font-medium leading-relaxed">
+              The Settings module is currently under development and is{" "}
+              <span className="text-brand">not yet implemented</span>.
+            </p>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="w-full py-4 rounded-xl bg-brand text-white font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          >
+            Okay
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
-
-  // ✅ Hooks must be called before any conditional returns
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false); // Modal state
 
   const hideNavbarPaths = ["/login", "/register"];
-  const shouldHideNavbar = hideNavbarPaths.includes(location.pathname);
+  if (hideNavbarPaths.includes(location.pathname)) return null;
 
-  if (shouldHideNavbar) {
-    return null;
-  }
+  const navItems = [
+    { label: "Recipes", path: "/", icon: UtensilsCrossed },
+    { label: "Favorites", path: "/favorites", icon: Heart },
+    { label: "Meal Plan", path: "/weekly-meal-plan", icon: CalendarDays },
+  ];
 
-  const isFavoritesActive = location.pathname === "/favorites";
-  const isRecipesActive = location.pathname === "/";
-  const isWeeklyMealPlanActive = location.pathname === "/weekly-meal-plan";
+  // Helper to handle settings click
+  const handleSettingsClick = (e) => {
+    e.preventDefault();
+    setShowSettingsModal(true);
+    setMobileNavOpen(false); // Close mobile nav if open
+  };
+
+  const NavButton = ({ item, isMobile = false }) => {
+    const isActive = location.pathname === item.path;
+    const Icon = item.icon;
+
+    return (
+      <button
+        onClick={() => {
+          navigate(item.path);
+          if (isMobile) setMobileNavOpen(false);
+        }}
+        className={`flex items-center gap-2 uppercase tracking-[0.15em] transition-all duration-300 ${
+          isMobile
+            ? "flex-col justify-center aspect-square rounded-2xl font-black text-[10px] border border-white/5"
+            : "px-4 py-2 rounded-xl text-[11px] font-black"
+        } ${
+          isActive
+            ? "bg-brand text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] scale-[1.02]"
+            : "text-muted hover:text-text hover:bg-white/10 bg-white/5 md:bg-transparent"
+        }`}
+      >
+        <Icon
+          size={isMobile ? 24 : 14}
+          className={`${isActive ? "fill-white" : ""} mb-0.5`}
+        />
+        {item.label}
+      </button>
+    );
+  };
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-border bg-bg/95 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="flex items-center justify-between h-20">
-            {/* LOGO / BRAND */}
+      <header className="sticky top-0 z-50 border-b border-border bg-bg/80 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="grid grid-cols-3 items-center h-20 md:flex md:justify-between">
+            <div className="md:hidden" />
+
             <div
-              className="cursor-pointer group flex items-center gap-3"
+              className="cursor-pointer group flex items-center gap-3 justify-center md:justify-start"
               onClick={() => navigate("/")}
             >
-              <div className="relative">
-                <div className="absolute inset-0 bg-brand/20 blur-xl rounded-full group-hover:bg-brand/30 transition-colors" />
-                <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-brand to-brand-600 flex items-center justify-center shadow-lg shadow-brand/20">
-                  <UtensilsCrossed className="text-white" size={22} />
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 bg-brand/20 blur-lg rounded-full group-hover:bg-brand/40 transition-colors" />
+                <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-brand to-brand-600 flex items-center justify-center shadow-lg">
+                  <UtensilsCrossed className="text-white" size={20} />
                 </div>
               </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-black tracking-tighter text-text leading-none">
+              <div className="flex flex-col">
+                <h1 className="text-lg md:text-xl font-black tracking-tighter text-text leading-none">
                   ELEVATED<span className="text-brand">FUEL</span>
                 </h1>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <Sparkles size={10} className="text-brand animate-pulse" />
-                  <p className="text-[9px] uppercase tracking-[0.3em] text-muted font-black">
+                <div className="hidden sm:flex items-center gap-1 mt-0.5">
+                  <Sparkles size={8} className="text-brand animate-pulse" />
+                  <p className="text-[8px] uppercase tracking-[0.2em] text-muted font-bold">
                     Performance Nutrition
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* DESKTOP NAV */}
-            <div className="hidden md:flex items-center gap-2">
-              <nav className="flex items-center gap-1 bg-white/5 p-1.5 rounded-2xl border border-white/5 mr-4">
+            <div className="flex justify-end items-center gap-3">
+              <div className="hidden md:flex items-center gap-2">
+                <nav className="flex items-center gap-1 bg-white/5 p-1 rounded-2xl border border-white/5 mr-2">
+                  {navItems.map((item) => (
+                    <NavButton key={item.path} item={item} />
+                  ))}
+                </nav>
+
                 <button
-                  onClick={() => navigate("/")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                    isRecipesActive
-                      ? "bg-brand text-white shadow-lg shadow-brand/20"
-                      : "text-muted hover:text-text hover:bg-white/5"
-                  }`}
+                  onClick={() => navigate("/add-recipe")}
+                  className="h-10 w-10 flex items-center justify-center rounded-xl bg-brand text-white shadow-lg hover:scale-110 transition-transform"
+                  title="Add Recipe"
                 >
-                  <UtensilsCrossed size={14} />
-                  Recipes
+                  <Plus size={20} strokeWidth={3} />
                 </button>
 
                 <button
-                  onClick={() => navigate("/favorites")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                    isFavoritesActive
-                      ? "bg-brand text-white shadow-lg shadow-brand/20"
-                      : "text-muted hover:text-text hover:bg-white/5"
-                  }`}
+                  onClick={handleSettingsClick} // Updated to show modal
+                  className="h-10 w-10 flex items-center justify-center rounded-xl border bg-white/5 border-white/5 text-muted hover:text-brand hover:border-brand/20 transition-all"
                 >
-                  <Heart
-                    size={14}
-                    className={isFavoritesActive ? "fill-white" : ""}
-                  />
-                  Favorites
+                  <Settings size={20} />
                 </button>
-
-                <button
-                  onClick={() => navigate("/weekly-meal-plan")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                    isWeeklyMealPlanActive
-                      ? "bg-brand text-white shadow-lg shadow-brand/20"
-                      : "text-muted hover:text-text hover:bg-white/5"
-                  }`}
-                >
-                  <CalendarDays
-                    size={14}
-                    className={isWeeklyMealPlanActive ? "fill-white" : ""}
-                  />
-                  Meal Plan
-                </button>
-              </nav>
+              </div>
 
               <button
-                onClick={() => navigate("/add-recipe")}
-                className="group relative flex items-center gap-2 px-6 py-2.5 rounded-full bg-brand text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all overflow-hidden"
+                className="md:hidden rounded-xl bg-white/5 p-2.5 border border-white/10 text-muted"
+                onClick={() => setMobileNavOpen(!mobileNavOpen)}
               >
-                <Plus size={18} strokeWidth={3} />
-                <span>Add Recipe</span>
+                {mobileNavOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
-
-            {/* MOBILE TOGGLE */}
-            <button
-              className="md:hidden rounded-xl bg-white/5 p-2.5 border border-white/10 text-muted"
-              onClick={() => setMobileNavOpen(!mobileNavOpen)}
-            >
-              {mobileNavOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
           </div>
         </div>
 
-        {/* MOBILE MENU */}
         <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out border-t border-border ${
-            mobileNavOpen ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
+          className={`md:hidden overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] bg-card/95 backdrop-blur-2xl ${
+            mobileNavOpen ? "max-h-[500px] border-t border-border" : "max-h-0"
           }`}
         >
-          <nav className="p-4 space-y-2 bg-card/50 backdrop-blur-xl">
-            <button
-              onClick={() => {
-                navigate("/");
-                setMobileNavOpen(false);
-              }}
-              className="w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 font-black uppercase tracking-widest text-xs"
-            >
-              Recipes
-            </button>
-            <button
-              onClick={() => {
-                navigate("/favorites");
-                setMobileNavOpen(false);
-              }}
-              className="w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 font-black uppercase tracking-widest text-xs"
-            >
-              Favorites
-            </button>
-            <button
-              onClick={() => {
-                navigate("/weekly-meal-plan");
-                setMobileNavOpen(false);
-              }}
-              className="w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 font-black uppercase tracking-widest text-xs"
-            >
-              Weekly Meal Plan
-            </button>
-
-            <div className="pt-2">
+          <div className="p-6">
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {navItems.map((item) => (
+                <NavButton key={item.path} item={item} isMobile />
+              ))}
+              {/* Mobile Settings Button */}
               <button
-                onClick={() => {
-                  navigate("/add-recipe");
-                  setMobileNavOpen(false);
-                }}
-                className="w-full group relative flex items-center justify-center gap-3 p-4 rounded-xl bg-brand text-white font-black text-sm uppercase tracking-wider"
+                onClick={handleSettingsClick}
+                className="flex flex-col items-center justify-center gap-2 uppercase tracking-[0.15em] aspect-square rounded-2xl font-black text-[10px] border border-white/5 bg-white/5 text-muted hover:text-text transition-all duration-300"
               >
-                <Plus size={20} strokeWidth={3} />
-                <span>Add New Recipe</span>
+                <UserCircle size={24} className="mb-0.5" />
+                Settings
               </button>
             </div>
-          </nav>
+
+            <button
+              onClick={() => {
+                navigate("/add-recipe");
+                setMobileNavOpen(false);
+              }}
+              className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl bg-brand text-white font-black text-sm uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+            >
+              <Plus size={20} strokeWidth={3} />
+              <span>Add New Recipe</span>
+            </button>
+          </div>
         </div>
       </header>
+
+      {/* Render the Modal */}
+      <ImplementationModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+      />
     </>
   );
 }
