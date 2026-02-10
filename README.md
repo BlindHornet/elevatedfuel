@@ -46,14 +46,12 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
      - Link Family Member (Shared Meal Plan/Favorites)
      - Change Name / Other Settings
      - Make a Suggestion
-4. Advanced Filter
-   - Better UI/UX For Advanced Filter
-5. Add Recipe
+4. Add Recipe
    - If link provided, try to scrape directions and ingredients
    - Add custom image for card
-6. View Recipe
+5. View Recipe
    - Add Ingredients To Shopping List
-7. Meal Plan
+6. Meal Plan
    - Under Date, summarize the P/C/F for all meals for that day
 
 # Contributing
