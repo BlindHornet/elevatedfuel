@@ -2,8 +2,6 @@
 import React from "react";
 import { X, Thermometer, Tag, Zap, Activity } from "lucide-react";
 
-// ✅ MOVED OUTSIDE: Defining this here prevents the "losing focus" issue
-// because React no longer treats it as a new component on every render.
 const NutritionInput = ({
   label,
   minKey,
@@ -47,7 +45,6 @@ const NutritionInput = ({
 );
 
 export default function AdvancedFilters({ filters, setFilters, tags }) {
-  // ✅ UPDATED LOGIC: Prevent negative values from entering the state
   const updateFilter = (key, value) => {
     if (value !== "" && Number(value) < 0) return;
     setFilters((prev) => ({ ...prev, [key]: value }));
