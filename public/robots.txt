@@ -1,0 +1,15 @@
+# Elevated Fuel - Healthy Food Search Database
+# https://elevated-fuel.netlify.app
+
+User-agent: *
+Disallow:
+
+# Optional: Block internal/private routes if they exist
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /private/
+Disallow: /draft/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://elevated-fuel.netlify.app/sitemap.xml
