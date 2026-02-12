@@ -11,6 +11,7 @@ import {
   Settings,
   AlertCircle,
   ShoppingCart,
+  Zap,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -19,29 +20,58 @@ function ImplementationModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="w-full max-w-sm overflow-hidden rounded-[2rem] bg-card border border-border shadow-2xl animate-in zoom-in-95 duration-300">
-        <div className="p-8 text-center space-y-6">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center">
-            <AlertCircle className="text-brand" size={32} />
-          </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-md"
+        onClick={onClose}
+      />
 
-          <div className="space-y-2">
-            <h3 className="text-xl font-black tracking-tight text-text uppercase">
-              Coming Soon
-            </h3>
-            <p className="text-sm text-muted font-medium leading-relaxed">
-              The Settings module is currently under development and is{" "}
-              <span className="text-brand">not yet implemented</span>.
-            </p>
-          </div>
+      {/* Modal */}
+      <div className="relative w-full max-w-sm">
+        {/* Ambient glow */}
+        <div className="absolute inset-0 bg-brand/20 blur-3xl rounded-full scale-150" />
 
-          <button
-            onClick={onClose}
-            className="w-full py-4 rounded-xl bg-brand text-white font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-          >
-            Okay
-          </button>
+        <div className="relative bg-white/[0.03] backdrop-blur-2xl rounded-[2rem] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 duration-300">
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] via-transparent to-black/[0.02] pointer-events-none" />
+
+          {/* Inner glow */}
+          <div className="absolute inset-0 rounded-[2rem] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] pointer-events-none" />
+
+          <div className="relative p-10 text-center space-y-6">
+            <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-brand/20 to-brand-600/20 backdrop-blur-xl border border-brand/30 flex items-center justify-center shadow-lg shadow-brand/20">
+              <AlertCircle className="text-brand" size={36} strokeWidth={2} />
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-2xl font-black tracking-tight text-white uppercase">
+                Coming Soon
+              </h3>
+              <p className="text-sm text-white/50 font-medium leading-relaxed">
+                The Settings module is currently under development and is{" "}
+                <span className="text-brand">not yet implemented</span>.
+              </p>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="group relative w-full px-8 py-4 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              {/* Background layers */}
+              <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand-600" />
+              <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+
+              {/* Border glow */}
+              <div className="absolute inset-0 rounded-2xl border border-white/20 shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]" />
+
+              {/* Content */}
+              <span className="relative text-white font-semibold tracking-wide uppercase text-sm">
+                Okay
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -52,7 +82,8 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false); // Modal state
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showAddSelection, setShowAddSelection] = useState(false);
 
   const hideNavbarPaths = ["/login", "/register"];
   if (hideNavbarPaths.includes(location.pathname)) return null;
@@ -64,19 +95,15 @@ export default function Navbar() {
     { label: "Meal Plan", path: "/weekly-meal-plan", icon: CalendarDays },
   ];
 
-  // Helper to handle settings click
   const handleSettingsClick = (e) => {
     e.preventDefault();
     setShowSettingsModal(true);
-    setMobileNavOpen(false); // Close mobile nav if open
+    setMobileNavOpen(false);
   };
 
   const NavButton = ({ item, isMobile = false }) => {
     const isActive = location.pathname === item.path;
     const Icon = item.icon;
-    const mobileStyles = isActive
-      ? "bg-brand text-white shadow-lg shadow-brand/20"
-      : "bg-white/5 border border-white/10 text-muted";
 
     if (isMobile) {
       return (
@@ -85,9 +112,13 @@ export default function Navbar() {
             navigate(item.path);
             setMobileNavOpen(false);
           }}
-          className={`flex flex-row items-center justify-start gap-4 px-5 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all duration-300 ${mobileStyles}`}
+          className={`flex flex-row items-center justify-start gap-4 px-5 py-4 rounded-xl font-semibold text-sm tracking-wide transition-all duration-300 ${
+            isActive
+              ? "bg-gradient-to-br from-brand to-brand-600 text-white shadow-lg shadow-brand/20 border border-white/20"
+              : "bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] text-white/60 hover:bg-white/[0.06] hover:text-white/80"
+          }`}
         >
-          <item.icon size={18} />
+          <item.icon size={20} strokeWidth={2} />
           <span>{item.label}</span>
         </button>
       );
@@ -95,24 +126,14 @@ export default function Navbar() {
 
     return (
       <button
-        onClick={() => {
-          navigate(item.path);
-          if (isMobile) setMobileNavOpen(false);
-        }}
-        className={`flex items-center gap-2 uppercase tracking-[0.15em] transition-all duration-300 ${
-          isMobile
-            ? "flex-col justify-center aspect-square rounded-2xl font-black text-[10px] border border-white/5"
-            : "px-4 py-2 rounded-xl text-[11px] font-black"
-        } ${
+        onClick={() => navigate(item.path)}
+        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide uppercase transition-all duration-300 ${
           isActive
-            ? "bg-brand text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] scale-[1.02]"
-            : "text-muted hover:text-text hover:bg-white/10 bg-white/5 md:bg-transparent"
+            ? "bg-gradient-to-br from-brand to-brand-600 text-white shadow-lg shadow-brand/20 scale-[1.02] border border-white/20"
+            : "bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] text-white/60 hover:bg-white/[0.06] hover:text-white/80 hover:border-white/[0.1]"
         }`}
       >
-        <Icon
-          size={isMobile ? 24 : 14}
-          className={`${isActive ? "fill-white" : ""} mb-0.5`}
-        />
+        <Icon size={16} strokeWidth={2} />
         {item.label}
       </button>
     );
@@ -120,60 +141,80 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-border bg-bg/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-black/40 backdrop-blur-xl">
+        {/* Subtle top highlight */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
         <div className="mx-auto max-w-7xl px-4">
           <div className="grid grid-cols-3 items-center h-20 md:flex md:justify-between">
             <div className="md:hidden" />
 
+            {/* Logo */}
             <div
               className="cursor-pointer group flex items-center gap-3 justify-center md:justify-start"
               onClick={() => navigate("/")}
             >
               <div className="relative shrink-0">
-                <div className="absolute inset-0 bg-brand/20 blur-lg rounded-full group-hover:bg-brand/40 transition-colors" />
-                <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-brand to-brand-600 flex items-center justify-center shadow-lg">
-                  <UtensilsCrossed className="text-white" size={20} />
+                <div className="absolute inset-0 bg-brand/30 blur-xl rounded-full group-hover:bg-brand/50 transition-all duration-300" />
+                <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-brand to-brand-600 flex items-center justify-center shadow-lg border border-white/20">
+                  <UtensilsCrossed
+                    className="text-white"
+                    size={22}
+                    strokeWidth={2}
+                  />
                 </div>
               </div>
               <div className="flex flex-col">
-                <h1 className="text-lg md:text-xl font-black tracking-tighter text-text leading-none">
+                <h1 className="text-xl font-black tracking-tighter text-white leading-none">
                   ELEVATED<span className="text-brand">FUEL</span>
                 </h1>
-                <div className="hidden sm:flex items-center gap-1 mt-0.5">
-                  <Sparkles size={8} className="text-brand animate-pulse" />
-                  <p className="text-[8px] uppercase tracking-[0.2em] text-muted font-bold">
+                <div className="hidden sm:flex items-center gap-1.5 mt-1">
+                  <Sparkles size={10} className="text-brand animate-pulse" />
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-white/40 font-semibold">
                     Performance Nutrition
                   </p>
                 </div>
               </div>
             </div>
 
+            {/* Desktop Navigation */}
             <div className="flex justify-end items-center gap-3">
               <div className="hidden md:flex items-center gap-2">
-                <nav className="flex items-center gap-1 bg-white/5 p-1 rounded-2xl border border-white/5 mr-2">
+                <nav className="flex items-center gap-2 bg-white/[0.03] backdrop-blur-xl p-2 rounded-2xl border border-white/[0.06]">
                   {navItems.map((item) => (
                     <NavButton key={item.path} item={item} />
                   ))}
                 </nav>
 
+                {/* Add Button */}
                 <button
-                  onClick={() => navigate("/add-recipe")}
-                  className="h-10 w-10 flex items-center justify-center rounded-xl bg-brand text-white shadow-lg hover:scale-110 transition-transform"
+                  onClick={() => setShowAddSelection(true)}
+                  className="group relative h-11 w-11 flex items-center justify-center rounded-xl overflow-hidden transition-all duration-300 hover:scale-110"
                   title="Add Recipe"
                 >
-                  <Plus size={20} strokeWidth={3} />
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand-600" />
+                  <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
+                  <div className="absolute inset-0 rounded-xl border border-white/20 shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]" />
+                  <div className="absolute inset-0 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] group-hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-shadow duration-300" />
+                  <Plus
+                    size={22}
+                    strokeWidth={2.5}
+                    className="relative text-white"
+                  />
                 </button>
 
+                {/* Settings Button */}
                 <button
-                  onClick={handleSettingsClick} // Updated to show modal
-                  className="h-10 w-10 flex items-center justify-center rounded-xl border bg-white/5 border-white/5 text-muted hover:text-brand hover:border-brand/20 transition-all"
+                  onClick={handleSettingsClick}
+                  className="h-11 w-11 flex items-center justify-center rounded-xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] text-white/60 hover:bg-white/[0.06] hover:text-white/80 hover:border-white/[0.1] transition-all duration-300"
                 >
-                  <Settings size={20} />
+                  <Settings size={20} strokeWidth={2} />
                 </button>
               </div>
 
+              {/* Mobile Menu Toggle */}
               <button
-                className="md:hidden rounded-xl bg-white/5 p-2.5 border border-white/10 text-muted"
+                className="md:hidden rounded-xl bg-white/[0.04] backdrop-blur-xl p-3 border border-white/[0.08] text-white/60 hover:text-white/80 transition-colors"
                 onClick={() => setMobileNavOpen(!mobileNavOpen)}
               >
                 {mobileNavOpen ? <X size={24} /> : <Menu size={24} />}
@@ -184,43 +225,142 @@ export default function Navbar() {
 
         {/* Mobile Navigation Dropdown */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out bg-bg border-t border-border ${
+          className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out border-t border-white/[0.06] ${
             mobileNavOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
-          <div className="p-4 space-y-3">
-            {/* Grid of 2 for main items, but shorter height */}
-            <div className="grid grid-cols-2 gap-2">
+          <div className="p-4 space-y-3 bg-black/20 backdrop-blur-xl">
+            <div className="grid grid-cols-2 gap-3">
               {navItems.map((item) => (
                 <NavButton key={item.path} item={item} isMobile />
               ))}
 
-              {/* Mobile Settings Button - matching the new slim row style */}
               <button
                 onClick={handleSettingsClick}
-                className="flex flex-row items-center justify-start gap-4 px-5 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest border border-white/5 bg-white/5 text-muted hover:text-text transition-all"
+                className="flex flex-row items-center justify-start gap-4 px-5 py-4 rounded-xl font-semibold text-sm tracking-wide bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] text-white/60 hover:bg-white/[0.06] hover:text-white/80 transition-all"
               >
-                <UserCircle size={18} />
+                <UserCircle size={20} strokeWidth={2} />
                 Settings
               </button>
             </div>
 
-            {/* Primary Action Button - Slimmed down */}
+            {/* Mobile Add Button */}
             <button
               onClick={() => {
-                navigate("/add-recipe");
+                setShowAddSelection(true);
                 setMobileNavOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-brand text-white font-black text-xs uppercase tracking-[0.2em] shadow-lg active:scale-[0.98] transition-all mt-2"
+              className="group relative w-full flex items-center justify-center gap-3 py-4 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
             >
-              <Plus size={18} strokeWidth={3} />
-              <span>Add Recipe</span>
+              <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand-600" />
+              <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
+              <div className="absolute inset-0 rounded-xl border border-white/20 shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]" />
+              <Plus
+                size={20}
+                strokeWidth={2.5}
+                className="relative text-white"
+              />
+              <span className="relative text-white font-semibold uppercase tracking-wide text-sm">
+                Add Recipe
+              </span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Render the Modal */}
+      {/* Add Recipe Selection Modal */}
+      {showAddSelection && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-md"
+            onClick={() => setShowAddSelection(false)}
+          />
+
+          {/* Modal */}
+          <div className="relative w-full max-w-md">
+            {/* Ambient glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-brand/20 blur-3xl rounded-full" />
+
+            <div className="relative bg-white/[0.03] backdrop-blur-2xl rounded-[2rem] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 duration-300">
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] via-transparent to-black/[0.02] pointer-events-none" />
+
+              {/* Inner glow */}
+              <div className="absolute inset-0 rounded-[2rem] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] pointer-events-none" />
+
+              <div className="relative p-8">
+                <h3 className="text-2xl font-black text-center uppercase tracking-tight text-white mb-8">
+                  Choose Method
+                </h3>
+
+                <div className="space-y-4">
+                  {/* Quick Add Option */}
+                  <button
+                    onClick={() => {
+                      setShowAddSelection(false);
+                      navigate("/add-recipe?mode=quick");
+                    }}
+                    className="w-full p-6 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] flex items-center gap-5 hover:bg-white/[0.06] hover:border-brand/30 transition-all group text-left shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]"
+                  >
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-brand/20 to-brand-600/20 backdrop-blur-xl border border-brand/30 flex items-center justify-center shrink-0 shadow-lg shadow-brand/10">
+                      <Zap
+                        className="text-brand group-hover:scale-110 transition-transform"
+                        size={24}
+                        strokeWidth={2}
+                      />
+                    </div>
+                    <div>
+                      <div className="font-bold uppercase text-sm tracking-wide text-white">
+                        Quick Add
+                      </div>
+                      <div className="text-xs text-white/40 font-medium mt-1">
+                        Title, Link, and Tags only
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Full Recipe Option */}
+                  <button
+                    onClick={() => {
+                      setShowAddSelection(false);
+                      navigate("/add-recipe?mode=full");
+                    }}
+                    className="group relative w-full p-6 rounded-2xl flex items-center gap-5 hover:scale-[1.02] transition-all text-left overflow-hidden border-0"
+                  >
+                    {/* Background layers */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand-600 rounded-2xl" />
+                    <div className="absolute inset-0 bg-white/10 backdrop-blur-xl rounded-2xl" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl" />
+                    <div className="absolute inset-0 rounded-2xl border border-white/20 shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]" />
+                    <div className="absolute inset-0 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.3)]" />
+
+                    <div className="relative w-14 h-14 rounded-xl bg-white/20 backdrop-blur-xl flex items-center justify-center shrink-0 text-white border border-white/30">
+                      <UtensilsCrossed size={24} strokeWidth={2} />
+                    </div>
+                    <div className="relative">
+                      <div className="font-bold uppercase text-sm tracking-wide text-white">
+                        Full Recipe
+                      </div>
+                      <div className="text-xs text-white/60 font-medium mt-1">
+                        Complete steps & nutrition
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setShowAddSelection(false)}
+                  className="w-full mt-6 py-3 text-xs font-semibold uppercase text-white/40 tracking-wider hover:text-white/60 transition-colors"
+                >
+                  Go Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ImplementationModal
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
