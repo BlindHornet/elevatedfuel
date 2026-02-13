@@ -25,8 +25,6 @@ export default function Login() {
   const [resetMsg, setResetMsg] = useState("");
 
   const loginUrlForReset = useMemo(() => {
-    // Where users should land after they finish reset (optional but recommended)
-    // Use your deployed domain:
     return "https://elevated-fuel.netlify.app/Login";
   }, []);
 
@@ -68,10 +66,8 @@ export default function Login() {
         return;
       }
 
-      // Optional: customize where the action links back to
-      // NOTE: The actual email HTML is controlled in Firebase Console Templates.
       const actionCodeSettings = {
-        url: loginUrlForReset,
+        url: `${window.location.origin}/login`,
         handleCodeInApp: false,
       };
 
@@ -96,12 +92,11 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-bg text-text relative overflow-hidden">
-      {/* Background glow (mobile + desktop) */}
+      {/* Background glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 -left-24 w-[420px] h-[420px] bg-brand/25 rounded-full blur-[140px] animate-pulse" />
         <div className="absolute top-1/3 -right-24 w-[360px] h-[360px] bg-brand/15 rounded-full blur-[140px]" />
         <div className="absolute -bottom-28 left-1/3 w-[520px] h-[520px] bg-brand/10 rounded-full blur-[160px]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] via-transparent to-transparent" />
       </div>
 
       <div className="relative z-10 grid lg:grid-cols-2 min-h-screen">
@@ -109,14 +104,8 @@ export default function Login() {
         <div className="grid place-items-center px-4 py-10 lg:py-0 order-2 lg:order-1">
           <div className="w-full max-w-md">
             <div className="relative bg-white/[0.03] backdrop-blur-2xl rounded-[32px] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.45)] overflow-hidden">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent" />
-
               <div className="relative p-8 sm:p-10">
-                {/* Header badge */}
                 <div className="flex items-center gap-4 mb-8">
-                  {/* <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-brand/25 to-brand-600/15 backdrop-blur-xl border border-brand/30 flex items-center justify-center shadow-[0_10px_30px_rgba(16,185,129,0.18)]">
-                    <span className="text-2xl font-black text-brand">⚡</span>
-                  </div> */}
                   <div>
                     <div className="text-2xl font-black tracking-tight">
                       Elevated <span className="text-brand">Fuel</span>
@@ -149,7 +138,6 @@ export default function Login() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      autoComplete="email"
                     />
                   </div>
 
@@ -164,7 +152,6 @@ export default function Login() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      autoComplete="current-password"
                     />
                   </div>
 
@@ -198,97 +185,96 @@ export default function Login() {
                 </form>
               </div>
             </div>
-
-            {/* <div className="mt-6 text-center text-xs text-muted/80">
-              Tip: if you don’t see emails, check Promotions/Spam first.
-            </div> */}
           </div>
         </div>
 
         {/* Visual side (desktop) */}
         <div className="hidden lg:flex flex-col justify-between p-12 bg-[url('https://elevated-fuel.netlify.app/social-share.png')] bg-cover bg-center relative order-1 lg:order-2">
-          {/* <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" /> */}
-          <div className="relative z-10 text-right">
-            {/* <h2 className="text-4xl font-black tracking-tighter text-brand">
-              ELEVATE
-            </h2> */}
-          </div>
-          <div className="relative z-10 text-right">
-            {/* <p className="text-2xl font-light italic max-w-xs ml-auto">
-              "The foundation of fitness starts in the kitchen."
-            </p> */}
-          </div>
+          {/* Decorative side content can go here */}
         </div>
       </div>
 
       {/* Reset Password Modal */}
+      {/* Reset Password Modal */}
       {showReset && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          {/* Backdrop - blurred and darkened to pop the modal */}
           <div
-            className="absolute inset-0 bg-black/70"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity"
             onClick={() => setShowReset(false)}
           />
-          <div className="relative w-full max-w-md bg-white/[0.05] backdrop-blur-2xl rounded-3xl border border-white/[0.10] shadow-[0_30px_90px_rgba(0,0,0,0.6)] overflow-hidden">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent" />
 
-            <div className="relative p-6 sm:p-7">
-              <div className="flex items-start justify-between gap-3">
+          {/* Modal Container - Centered Overlay */}
+          <div
+            className="
+        relative w-full max-w-md
+        bg-[#121212] backdrop-blur-2xl
+        border border-white/[0.12]
+        shadow-[0_30px_90px_rgba(0,0,0,0.8)]
+        rounded-[32px]
+        overflow-hidden
+        z-[101]
+        animate-in fade-in zoom-in-95 duration-200
+      "
+            role="dialog"
+          >
+            {/* Top Sheen */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/[0.08] to-transparent" />
+
+            <div className="relative p-8 sm:p-10">
+              <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-xl font-black">Reset your password</div>
-                  <div className="text-sm text-muted mt-1">
-                    We’ll email you a reset link.
-                  </div>
+                  <h3 className="text-2xl font-black tracking-tight">
+                    Reset Password
+                  </h3>
+                  <p className="text-sm text-muted mt-2">
+                    We'll send a recovery link to your email.
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowReset(false)}
-                  className="px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-muted hover:text-white transition-colors"
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-muted hover:text-white transition-all"
                 >
                   ✕
                 </button>
               </div>
 
-              <form onSubmit={onSendReset} className="mt-5 space-y-4">
+              <form onSubmit={onSendReset} className="mt-8 space-y-6">
                 <div className="space-y-2">
                   <label className="text-xs uppercase tracking-widest font-semibold text-muted">
-                    Email
+                    Email Address
                   </label>
                   <input
-                    className="w-full bg-white/[0.04] backdrop-blur-xl rounded-2xl px-5 py-4 text-white border border-white/[0.08] outline-none transition-all focus:border-brand/50 focus:bg-white/[0.06]"
+                    className="w-full bg-white/[0.05] rounded-2xl px-5 py-4 text-white border border-white/[0.10] outline-none transition-all focus:border-brand/60"
                     type="email"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
-                    placeholder="name@energy.com"
+                    placeholder="name@fuel.com"
                     required
-                    autoComplete="email"
                   />
                 </div>
 
                 {resetMsg && (
-                  <div className="text-sm text-muted bg-white/[0.03] border border-white/[0.08] rounded-2xl p-3">
+                  <div className="text-sm text-brand bg-brand/10 border border-brand/20 rounded-2xl p-4">
                     {resetMsg}
                   </div>
                 )}
 
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowReset(false)}
-                    className="flex-1 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white font-bold hover:bg-white/[0.06] transition-colors"
-                  >
-                    Cancel
-                  </button>
+                <div className="flex flex-col gap-3 pt-2">
                   <button
                     disabled={resetBusy}
-                    className="flex-1 py-3 rounded-2xl bg-brand text-black font-black uppercase tracking-widest disabled:opacity-50"
+                    className="w-full py-4 rounded-2xl bg-brand text-black font-black uppercase tracking-widest disabled:opacity-50 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all"
                   >
                     {resetBusy ? "Sending..." : "Send Link"}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowReset(false)}
+                    className="w-full py-4 rounded-2xl bg-white/[0.05] border border-white/[0.10] text-white font-bold hover:bg-white/[0.10] transition-colors"
+                  >
+                    Cancel
+                  </button>
                 </div>
-
-                {/* <div className="text-xs text-muted/80">
-                  If it doesn’t arrive, check Promotions/Spam. Some providers
-                  delay first-time senders.
-                </div> */}
               </form>
             </div>
           </div>
