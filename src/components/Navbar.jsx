@@ -1,3 +1,4 @@
+// Module Imports
 import React, { useState } from "react";
 import {
   Menu,
@@ -14,6 +15,9 @@ import {
   Zap,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+
+// Component Imports
+import AppVersion from "./AppVersion";
 
 // Modal Component for "Not Yet Implemented"
 function ImplementationModal({ isOpen, onClose }) {
@@ -168,10 +172,13 @@ export default function Navbar() {
                 <h1 className="text-xl font-black tracking-tighter text-white leading-none">
                   ELEVATED<span className="text-brand">FUEL</span>
                 </h1>
+                <div className="sm:hidden flex justify-center mt-1">
+                  <AppVersion />
+                </div>
                 <div className="hidden sm:flex items-center gap-1.5 mt-1">
                   <Sparkles size={10} className="text-brand animate-pulse" />
                   <p className="text-[9px] uppercase tracking-[0.2em] text-white/40 font-semibold">
-                    Performance Nutrition
+                    Performance Nutrition <AppVersion />
                   </p>
                 </div>
               </div>
@@ -213,6 +220,7 @@ export default function Navbar() {
               </div>
 
               {/* Mobile Menu Toggle */}
+
               <button
                 className="md:hidden rounded-xl bg-white/[0.04] backdrop-blur-xl p-3 border border-white/[0.08] text-white/60 hover:text-white/80 transition-colors"
                 onClick={() => setMobileNavOpen(!mobileNavOpen)}

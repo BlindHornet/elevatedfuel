@@ -1,11 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import pkg from "./package.json" assert { type: "json" };
 
-// https://vite.dev/config/
 export default defineConfig({
   build: {
-    chunkSizeWarningLimit: 1000, // or higher
+    chunkSizeWarningLimit: 1000,
   },
   plugins: [react(), tailwindcss()],
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
 });
