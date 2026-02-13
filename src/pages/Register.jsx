@@ -111,7 +111,7 @@ export default function Register() {
                     <input
                       className="w-full bg-white/[0.04] backdrop-blur-xl rounded-2xl px-5 py-4 text-white border border-white/[0.08] outline-none transition-all focus:border-brand/50 focus:bg-white/[0.06]"
                       type="email"
-                      placeholder="name@energy.com"
+                      placeholder="name@fuel.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
