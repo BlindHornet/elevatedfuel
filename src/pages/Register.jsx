@@ -161,17 +161,17 @@ export default function Register() {
         </div>
 
         {/* Visual side (desktop) */}
-        <div className="hidden lg:flex flex-col justify-between p-12 bg-[url('https://images.unsplash.com/photo-1547592166-23ac45744acd?q=80&w=2071')] bg-cover bg-center relative order-1 lg:order-2">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        <div className="hidden lg:flex flex-col justify-between p-12 bg-[url('https://elevated-fuel.netlify.app/social-share.png')] bg-cover bg-center relative order-1 lg:order-2">
+          {/* <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" /> */}
           <div className="relative z-10 text-right">
-            <h2 className="text-4xl font-black tracking-tighter text-brand">
+            {/* <h2 className="text-4xl font-black tracking-tighter text-brand">
               ELEVATE
-            </h2>
+            </h2> */}
           </div>
           <div className="relative z-10 text-right">
-            <p className="text-2xl font-light italic max-w-xs ml-auto">
+            {/* <p className="text-2xl font-light italic max-w-xs ml-auto">
               "The foundation of fitness starts in the kitchen."
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
