@@ -1,5 +1,8 @@
+// Module Imports
 import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
+// Firebase Imports
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -142,7 +145,7 @@ export default function Login() {
                     <input
                       className="w-full bg-white/[0.04] backdrop-blur-xl rounded-2xl px-5 py-4 text-white border border-white/[0.08] outline-none transition-all focus:border-brand/50 focus:bg-white/[0.06]"
                       type="email"
-                      placeholder="name@energy.com"
+                      placeholder="name@fuel.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -203,17 +206,17 @@ export default function Login() {
         </div>
 
         {/* Visual side (desktop) */}
-        <div className="hidden lg:flex flex-col justify-between p-12 bg-[url('https://images.unsplash.com/photo-1547592166-23ac45744acd?q=80&w=2071')] bg-cover bg-center relative order-1 lg:order-2">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        <div className="hidden lg:flex flex-col justify-between p-12 bg-[url('https://elevated-fuel.netlify.app/social-share.png')] bg-cover bg-center relative order-1 lg:order-2">
+          {/* <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" /> */}
           <div className="relative z-10 text-right">
-            <h2 className="text-4xl font-black tracking-tighter text-brand">
+            {/* <h2 className="text-4xl font-black tracking-tighter text-brand">
               ELEVATE
-            </h2>
+            </h2> */}
           </div>
           <div className="relative z-10 text-right">
-            <p className="text-2xl font-light italic max-w-xs ml-auto">
+            {/* <p className="text-2xl font-light italic max-w-xs ml-auto">
               "The foundation of fitness starts in the kitchen."
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
