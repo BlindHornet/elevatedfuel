@@ -73,8 +73,9 @@ export default function Login() {
 
       await sendPasswordResetEmail(auth, to, actionCodeSettings);
 
+      // Updated success message
       setResetMsg(
-        "Password reset email sent. Check spam/promotions if you don’t see it.",
+        "Reset link sent! Please check your inbox. If you don't see it, check your spam folder.",
       );
     } catch (error) {
       console.error("Reset email error:", error);
