@@ -37,18 +37,33 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
 
 ## Future Development Goals
 
-1. Make Better UI/UX Improvements for Mobile
-2. Admin
+1. Admin
    - Quickly Pullback Pending Submissoins (Verify No Junk Added)
      - Approve / Reject Submissions
-3. Pages
+2. Pages
    - Settings
      - Link Family Member (Shared Meal Plan/Favorites)
      - Change Name / Other Settings
      - Make a Suggestion
-4. Add Recipe
+     - Whats New including version numbers
+3. Add Recipe
    - If link provided, try to scrape directions and ingredients
    - Add custom image for card
+4. Filter
+   - Show Total Recipe Count At Top
+   - Add Date Filter
+   - Add Most Popular Option
+   - First / Last Page Quick Clicks
+   - If Date = Today or Pending Status show NEW tag
+   - Fix Order By - not reflecting correctly
+5. Recipe Card
+   - If quick added, for Macros and Servings, have it show "Quick added, details needed"
+6. View Recipe
+   - Allow the Image to be a link for quick view
+   - Add View Link Source button moved to under image and more pronounced
+7. Meal Plan
+   - When I remove a fuel from the list, do not remove from the days its been assigned
+   - Add Filter to Meal Plan Fuel List if multiple
 
 # Contributing
 
