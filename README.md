@@ -56,11 +56,11 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
    - First / Last Page Quick Clicks
    - If Date = Today or Pending Status show NEW tag
    - Fix Order By - not reflecting correctly
+   - Pagination Should move back to top of page
 5. Recipe Card
    - If quick added, for Macros and Servings, have it show "Quick added, details needed"
-6. View Recipe
-   - Allow the Image to be a link for quick view
-   - Add View Link Source button moved to under image and more pronounced
+6. Back Button
+   - Does Not Go Back To Filtered Items
 7. Meal Plan
    - When I remove a fuel from the list, do not remove from the days its been assigned
    - Add Filter to Meal Plan Fuel List if multiple

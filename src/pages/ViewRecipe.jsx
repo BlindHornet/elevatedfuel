@@ -420,39 +420,66 @@ export default function ViewRecipe() {
         <div className="grid lg:grid-cols-[1fr_350px] gap-8">
           <div className="space-y-8">
             {/* IMAGE & RATINGS */}
-            <div className="relative aspect-[16/10] rounded-[var(--radius-lg)] overflow-hidden border border-border bg-card">
-              {recipe.image && !imageError ? (
-                <img
-                  src={recipe.image}
-                  className="w-full h-full object-cover"
-                  alt={recipe.title}
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-bg to-card">
-                  <span className="text-3xl font-black uppercase tracking-widest text-muted/30">
-                    No Image
-                  </span>
+            <div className="space-y-3">
+              {" "}
+              {/* Wrapper to group image and the new button */}
+              <a
+                href={recipe["url-link"]}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`relative aspect-[16/10] rounded-[var(--radius-lg)] overflow-hidden border border-border bg-card block ${!recipe["url-link"] ? "pointer-events-none" : "cursor-pointer"}`}
+              >
+                {recipe.image && !imageError ? (
+                  <img
+                    src={recipe.image}
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    alt={recipe.title}
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-bg to-card">
+                    <span className="text-3xl font-black uppercase tracking-widest text-muted/30">
+                      No Image
+                    </span>
+                  </div>
+                )}
+
+                {/* Ratings Overlay */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col gap-3 bg-black/60 backdrop-blur-xl p-4 rounded-3xl border border-white/10 shadow-2xl">
+                  <StarRating
+                    rating={avgUserRating}
+                    label="Avg User Rating"
+                    size="w-3.5 h-3.5"
+                  />
+                  <div className="h-px bg-white/10 w-full" />
+                  <StarRating
+                    rating={
+                      recipe.adminReviewScore ||
+                      recipe.adminRating ||
+                      recipe.rating ||
+                      0
+                    }
+                    label="Admin Rating"
+                    size="w-3.5 h-3.5"
+                  />
                 </div>
+              </a>
+              {/* New Green Glass Button under Image */}
+              {recipe["url-link"] && (
+                <a
+                  href={recipe["url-link"]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative w-full py-4 rounded-2xl overflow-hidden flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                >
+                  <div className="absolute inset-0 bg-brand/20 backdrop-blur-md" />
+                  <div className="absolute inset-0 border border-brand/30 rounded-2xl" />
+                  <Save size={16} className="relative text-brand" />
+                  <span className="relative text-brand font-black uppercase tracking-widest text-xs">
+                    View Source Link
+                  </span>
+                </a>
               )}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col gap-3 bg-black/60 backdrop-blur-xl p-4 rounded-3xl border border-white/10 shadow-2xl">
-                <StarRating
-                  rating={avgUserRating}
-                  label="Avg User Rating"
-                  size="w-3.5 h-3.5"
-                />
-                <div className="h-px bg-white/10 w-full" />
-                <StarRating
-                  rating={
-                    recipe.adminReviewScore ||
-                    recipe.adminRating ||
-                    recipe.rating ||
-                    0
-                  }
-                  label="Admin Rating"
-                  size="w-3.5 h-3.5"
-                />
-              </div>
             </div>
 
             {/* DESCRIPTION */}
@@ -658,18 +685,7 @@ export default function ViewRecipe() {
                 ))}
               </div>
 
-              {/* URL LINK */}
-              {recipe["url-link"] && (
-                <a
-                  href={recipe["url-link"]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3 mb-3 rounded-full border border-border bg-bg flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted hover:text-brand hover:border-brand transition-all"
-                >
-                  <Save size={14} /> View Source Link
-                </a>
-              )}
-
+              {/* Add To Meal Plan and Shopping List Buttons */}
               <div className="space-y-3">
                 <button
                   onClick={handleAddToMealPlan}
