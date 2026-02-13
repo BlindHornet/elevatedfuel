@@ -50,17 +50,13 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
    - If link provided, try to scrape directions and ingredients
    - Add custom image for card
 4. Filter
-   - Show Total Recipe Count At Top
    - Add Date Filter
    - Add Most Popular Option
-   - First / Last Page Quick Clicks
    - If Date = Today or Pending Status show NEW tag
-   - Fix Order By - not reflecting correctly
-   - Pagination Should move back to top of page
 5. Recipe Card
    - If quick added, for Macros and Servings, have it show "Quick added, details needed"
 6. Back Button
-   - Does Not Go Back To Filtered Items
+   - Does Not Go Back To Filtered Items Bug
 7. Meal Plan
    - When I remove a fuel from the list, do not remove from the days its been assigned
    - Add Filter to Meal Plan Fuel List if multiple
