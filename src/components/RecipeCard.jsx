@@ -108,6 +108,15 @@ export default function RecipeCard({ recipe }) {
           </div>
         )}
 
+        {/* PENDING STATUS OVERLAY */}
+        {recipe.status === "Pending" && (
+          <div className="absolute top-3 left-3 z-10">
+            <div className="bg-brand text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg uppercase tracking-widest">
+              Pending
+            </div>
+          </div>
+        )}
+
         {/* RATINGS SECTION (Bottom Center) */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col gap-2 bg-black/60 backdrop-blur-xl px-4 py-3 rounded-2xl border border-white/10 shadow-2xl">
           {/* Average User Rating */}
@@ -175,7 +184,58 @@ export default function RecipeCard({ recipe }) {
           </div>
 
           {/* INFO ROW */}
-          <div className="flex items-center gap-4 border-t border-border/50 pt-4">
+          {!recipe.macros ||
+          (recipe.macros.protein === "" &&
+            recipe.macros.carbs === "" &&
+            recipe.macros.fat === "" &&
+            (recipe.macros.calories === "" || recipe.macros.calories === 0)) ? (
+            /* QUICK ADDED MESSAGE */
+            <div className="py-2 px-4 rounded-xl bg-white/5 border border-dashed border-white/10">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-brand/60 italic text-center">
+                Quick added, details needed
+              </p>
+            </div>
+          ) : (
+            /* REGULAR MACROS & TIME DISPLAY */
+            <>
+              {/* TIME & SERVINGS ROW */}
+              <div className="flex items-center gap-4">
+                {(prep != null || cook != null) && (
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-muted">
+                    <Clock className="h-3.5 w-3.5 text-brand" />
+                    <span>{Number(prep || 0) + Number(cook || 0)} MIN</span>
+                  </div>
+                )}
+                {recipe.servings && (
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-muted">
+                    <Users className="h-3.5 w-3.5 text-brand" />
+                    <span>{recipe.servings} SERVING(S)</span>
+                  </div>
+                )}
+              </div>
+
+              {/* MACROS & CALORIES ROW */}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-wrap gap-2">
+                  <MacroBadge label="P" value={recipe?.macros?.protein} />
+                  <MacroBadge label="C" value={recipe?.macros?.carbs} />
+                  <MacroBadge label="F" value={recipe?.macros?.fat} />
+                </div>
+
+                {calories != null && (
+                  <div className="text-right">
+                    <div className="text-[10px] font-black text-muted uppercase tracking-tighter">
+                      Calories
+                    </div>
+                    <div className="text-sm font-black text-text leading-none">
+                      {calories}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+          {/* <div className="flex items-center gap-4 border-t border-border/50 pt-4">
             {(prep != null || cook != null) && (
               <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-muted">
                 <Clock className="h-3.5 w-3.5 text-brand" />
@@ -188,10 +248,10 @@ export default function RecipeCard({ recipe }) {
                 <span>{recipe.servings} SERVING(S)</span>
               </div>
             )}
-          </div>
+          </div> */}
 
           {/* MACROS & CALORIES ROW */}
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <div className="flex flex-wrap gap-2">
               <MacroBadge label="P" value={recipe?.macros?.protein} />
               <MacroBadge label="C" value={recipe?.macros?.carbs} />
@@ -208,7 +268,7 @@ export default function RecipeCard({ recipe }) {
                 </div>
               </div>
             )}
-          </div>
+          </div> */}
         </div>
       </div>
     </Link>

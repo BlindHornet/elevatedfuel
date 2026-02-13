@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.8] - 2026-02-13
+
+### Added
+
+- Recipe Card
+  - If status = Pending - Add New tag on picture
+  - If Quick Added, Show Needs Details
+
 ## [0.1.6] - 2026-02-13
 
 ### Added
