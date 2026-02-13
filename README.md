@@ -49,13 +49,9 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
 3. Add Recipe
    - If link provided, try to scrape directions and ingredients
    - Add custom image for card
-4. Back Button
-   - Does Not Go Back To Filtered Items Bug
-5. Meal Plan
-   - When I remove a fuel from the list, do not remove from the days its been assigned
-   - Add Filter to Meal Plan Fuel List if multiple
-6. Filters
-   - Advanced Filter to show highest rated first
+4. Filters
+
+- Advanced Filter to show highest rated first
 
 # Contributing
 

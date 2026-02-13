@@ -1,8 +1,18 @@
 # Changelog
 
+## [0.2.11] - 2026-02-13
+
+### Fixed
+
+- Filter + View Recipe
+  - If a filter is selected, and the user goes to view a recipe, when back is pushed, it was resetting filters. This is now fixed.
+- Meal Plan
+  - Dropping Recipe on Day wasnt working for PC or Mobile - Fixed
+  - Removing Recipe From Fuel List does not remove from days - Fixed
+
 ## [0.1.8] - 2026-02-13
 
-### Added
+### Changed
 
 - Recipe Card
   - If status = Pending - Add New tag on picture
@@ -10,9 +20,9 @@
 
 ## [0.1.6] - 2026-02-13
 
-### Added
+### Changed
 
-- Home Page Changes
+- Home Page
   - Show Total Recipe count at Top
   - Recipes show in descending order of creation
   - Pagination
@@ -21,7 +31,7 @@
 
 ## [0.1.2] - 2026-02-13
 
-### Added
+### Changed
 
 - View Recipe
   - Allow Image To be Link to View Source
@@ -31,7 +41,7 @@
 
 ### Added
 
-- Initial release
+- Initial release of Change Log
 
 ### Fixed
 

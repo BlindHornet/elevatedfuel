@@ -1,6 +1,7 @@
 // Module Imports
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useSearchParams } from "react-router-dom"; // Added for URL persistence
 
 // Component Imports
 import RecipeCard from "../components/RecipeCard";
@@ -36,17 +37,21 @@ const RECIPES_PER_PAGE = 9;
 export default function Home() {
   // 1. DATA AND STATE MANAGEMENT
   const { recipes = [], loading, error } = useRecipes();
-  const [selectedRecipe, setSelectedRecipe] = useState(null);
-  const [query, setQuery] = useState("");
-  const [activeTag, setActiveTag] = useState("All");
-  //const [showAddRecipe, setShowAddRecipe] = useState(false);
-  const [activePage, setActivePage] = useState("recipes");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Advanced filter state
-  const [advancedFilters, setAdvancedFilters] = useState({
-    servingTemp: "all", // 'all', 'hot', 'cold'
+  // Modal state remains local as it doesn't need to persist in URL
+  const [selectedRecipe, setSelectedRecipe] = React.useState(null);
+  const [activePage, setActivePage] = React.useState("recipes");
+  const [showAdvanced, setShowAdvanced] = React.useState(false);
+
+  // Derived state from URL Search Parameters
+  const query = searchParams.get("q") || "";
+  const activeTag = searchParams.get("tag") || "All";
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+
+  // Advanced filter state (kept local but could be synced if needed)
+  const [advancedFilters, setAdvancedFilters] = React.useState({
+    servingTemp: "all",
     selectedTags: [],
     caloriesMin: "",
     caloriesMax: "",
@@ -58,20 +63,40 @@ export default function Home() {
     proteinMax: "",
   });
 
-  // 2. LOGIC: Filtering recipes based on search and tags
+  // State Update Helpers
+  const setQuery = (newQuery) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (newQuery) nextParams.set("q", newQuery);
+    else nextParams.delete("q");
+    nextParams.set("page", "1"); // Reset pagination on search
+    setSearchParams(nextParams);
+  };
+
+  const setActiveTag = (newTag) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("tag", newTag);
+    nextParams.set("page", "1"); // Reset pagination on filter
+    setSearchParams(nextParams);
+  };
+
+  const setCurrentPage = (newPage) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("page", newPage.toString());
+    setSearchParams(nextParams);
+  };
+
+  // 2. LOGIC: Filtering recipes
   const filteredRecipes = useMemo(() => {
     const q = query.trim().toLowerCase();
     return (recipes || []).filter((r) => {
       const title = (r.title || "").toLowerCase();
       const recipeTags = Array.isArray(r.tags) ? r.tags : [];
 
-      // 1. Search Match
       const matchesQuery =
         !q ||
         title.includes(q) ||
         recipeTags.some((t) => String(t).toLowerCase().includes(q));
 
-      // 2. Tag Match (Combines both UI elements)
       const effectiveTags = showAdvanced
         ? advancedFilters.selectedTags
         : [activeTag];
@@ -80,7 +105,6 @@ export default function Home() {
           effectiveTags.every((t) => recipeTags.includes(t))
         : activeTag === "All" || recipeTags.includes(activeTag);
 
-      // 3. Nutrition Match
       let matchesNutrition = true;
       if (showAdvanced) {
         const checkRange = (value, min, max) => {
@@ -114,7 +138,6 @@ export default function Home() {
             advancedFilters.proteinMax,
           );
 
-        // Also check Serving Temp if in advanced mode
         if (advancedFilters.servingTemp !== "all") {
           matchesNutrition =
             matchesNutrition &&
@@ -126,6 +149,7 @@ export default function Home() {
     });
   }, [recipes, query, activeTag, showAdvanced, advancedFilters]);
 
+  // Scroll to top when page changes
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
@@ -133,14 +157,12 @@ export default function Home() {
   // Sort by createdAt (newest first) and paginate
   const paginatedRecipes = useMemo(() => {
     const sorted = [...filteredRecipes].sort((a, b) => {
-      // Check if createdAt is a Firebase Timestamp (has seconds/nanoseconds) or a Date
       const getTime = (val) => {
         if (!val) return 0;
-        if (val.seconds) return val.seconds * 1000; // Firebase Timestamp
-        return new Date(val).getTime(); // Date string or object
+        if (val.seconds) return val.seconds * 1000;
+        return new Date(val).getTime();
       };
-
-      return getTime(b.createdAt) - getTime(a.createdAt); // Newest first (descending)
+      return getTime(b.createdAt) - getTime(a.createdAt);
     });
 
     const startIndex = (currentPage - 1) * RECIPES_PER_PAGE;
@@ -150,14 +172,8 @@ export default function Home() {
 
   const totalPages = Math.ceil(filteredRecipes.length / RECIPES_PER_PAGE);
 
-  // Reset to page 1 when filters change
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [query, activeTag, advancedFilters, showAdvanced]);
-
   const handleResetFilters = () => {
-    setQuery("");
-    setActiveTag("All");
+    setSearchParams({}); // Clear all URL params
     setAdvancedFilters({
       servingTemp: "all",
       selectedTags: [],
@@ -171,10 +187,9 @@ export default function Home() {
       proteinMax: "",
     });
     setShowAdvanced(false);
-    setCurrentPage(1);
   };
 
-  // 3. RENDER: Purely layout coordination
+  // 3. RENDER
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-brand/30">
       <main className="mx-auto max-w-6xl px-4 py-8 pb-32">
@@ -236,7 +251,6 @@ export default function Home() {
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
                   <div className="mt-12 flex flex-wrap items-center justify-center gap-2">
-                    {/* First Page Button */}
                     {currentPage !== 1 && (
                       <button
                         onClick={() => setCurrentPage(1)}
@@ -247,7 +261,9 @@ export default function Home() {
                     )}
 
                     <button
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      onClick={() =>
+                        setCurrentPage(Math.max(1, currentPage - 1))
+                      }
                       disabled={currentPage === 1}
                       className="p-2 rounded-lg border border-border bg-card text-text hover:border-brand disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                       aria-label="Previous page"
@@ -256,12 +272,14 @@ export default function Home() {
                     </button>
 
                     <div className="flex items-center gap-2">
-                      {/* ... existing page numbers logic ... */}
+                      <span className="text-xs font-bold text-muted px-4">
+                        Page {currentPage} of {totalPages}
+                      </span>
                     </div>
 
                     <button
                       onClick={() =>
-                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                        setCurrentPage(Math.min(totalPages, currentPage + 1))
                       }
                       disabled={currentPage === totalPages}
                       className="p-2 rounded-lg border border-border bg-card text-text hover:border-brand disabled:opacity-30 disabled:cursor-not-allowed transition-all"
@@ -270,7 +288,6 @@ export default function Home() {
                       <ChevronRight className="h-5 w-5" />
                     </button>
 
-                    {/* Last Page Button */}
                     {currentPage !== totalPages && (
                       <button
                         onClick={() => setCurrentPage(totalPages)}
@@ -282,15 +299,13 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Results info */}
                 <div className="mt-6 text-center text-sm text-muted">
                   Showing {(currentPage - 1) * RECIPES_PER_PAGE + 1} -{" "}
                   {Math.min(
                     currentPage * RECIPES_PER_PAGE,
                     filteredRecipes.length,
                   )}{" "}
-                  of {filteredRecipes.length} recipe
-                  {filteredRecipes.length !== 1 ? "s" : ""}
+                  of {filteredRecipes.length} recipes
                 </div>
               </>
             )}
@@ -298,7 +313,6 @@ export default function Home() {
         )}
       </main>
 
-      {/* 4. MODALS AND OVERLAYS */}
       {selectedRecipe && (
         <RecipeView
           recipe={selectedRecipe}

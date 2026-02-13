@@ -5,7 +5,6 @@ import {
   ChevronRight,
   RotateCcw,
   Trash2,
-  Calendar,
   Eye,
   Plus,
   X,
@@ -24,7 +23,7 @@ import {
 } from "firebase/firestore";
 
 const MEALS = ["Breakfast", "Snack 1", "Lunch", "Snack 2", "Dinner", "Dessert"];
-const DAYS_TO_SHOW = 4; // Show 4 days for bigger boxes
+const DAYS_TO_SHOW = 4;
 
 function getDayKey(date) {
   return date.toISOString().split("T")[0];
@@ -47,11 +46,10 @@ export default function WeeklyMealPlan() {
   const [startDate, setStartDate] = useState(new Date());
   const [mealPlan, setMealPlan] = useState({});
   const [libraryRecipes, setLibraryRecipes] = useState({});
+  const [persistentRecipes, setPersistentRecipes] = useState({});
   const [loading, setLoading] = useState(true);
   const [draggedRecipe, setDraggedRecipe] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-
-  // Mobile & Replacement State
   const [mobileAddRecipe, setMobileAddRecipe] = useState(null);
   const [replaceConfirm, setReplaceConfirm] = useState(null);
 
@@ -77,26 +75,36 @@ export default function WeeklyMealPlan() {
     return () => unsubscribe();
   }, [currentUser]);
 
-  // Sync Schedule
+  // Sync Schedule and Persistent Data
   useEffect(() => {
     if (!currentUser) return;
     const planRef = doc(db, "users", currentUser.uid, "mealPlans", "current");
     const unsubscribe = onSnapshot(planRef, (docSnap) => {
       if (docSnap.exists()) {
-        setMealPlan(docSnap.data().plan || {});
+        const data = docSnap.data();
+        setMealPlan(data.plan || {});
+        setPersistentRecipes(data.persistentRecipes || {});
       }
       setLoading(false);
     });
     return () => unsubscribe();
   }, [currentUser]);
 
+  const getRecipeData = (recipeId) => {
+    return libraryRecipes[recipeId] || persistentRecipes[recipeId];
+  };
+
   const saveMealPlan = async (newPlan) => {
     if (!currentUser) return;
     try {
-      await setDoc(doc(db, "users", currentUser.uid, "mealPlans", "current"), {
-        plan: newPlan,
-        updatedAt: serverTimestamp(),
-      });
+      await setDoc(
+        doc(db, "users", currentUser.uid, "mealPlans", "current"),
+        {
+          plan: newPlan,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
     } catch (err) {
       console.error("Error saving meal plan:", err);
     }
@@ -115,7 +123,7 @@ export default function WeeklyMealPlan() {
   const handleMobileSlotClick = (recipe, day, meal) => {
     const existingRecipeId = mealPlan[day]?.[meal];
     if (existingRecipeId) {
-      const existingRecipe = libraryRecipes[existingRecipeId];
+      const existingRecipe = getRecipeData(existingRecipeId);
       setReplaceConfirm({
         newRecipe: recipe,
         existingTitle: existingRecipe?.title || "Existing Recipe",
@@ -127,12 +135,32 @@ export default function WeeklyMealPlan() {
     }
   };
 
-  const handleDeleteFromSlot = (dayKey, mealType) => {
+  // FIXED: Logic to remove from schedule only
+  const handleDeleteFromSlot = async (dayKey, mealType) => {
     const newPlan = { ...mealPlan };
     if (newPlan[dayKey]) {
       delete newPlan[dayKey][mealType];
+      // Clean up empty day objects
+      if (Object.keys(newPlan[dayKey]).length === 0) {
+        delete newPlan[dayKey];
+      }
       setMealPlan(newPlan);
-      saveMealPlan(newPlan);
+
+      // Save the entire updated plan
+      if (currentUser) {
+        try {
+          await setDoc(
+            doc(db, "users", currentUser.uid, "mealPlans", "current"),
+            {
+              plan: newPlan,
+              updatedAt: serverTimestamp(),
+            },
+            { merge: false }, // Don't merge - replace the plan entirely
+          );
+        } catch (err) {
+          console.error("Error deleting meal:", err);
+        }
+      }
     }
     setDeleteConfirm(null);
   };
@@ -140,17 +168,29 @@ export default function WeeklyMealPlan() {
   const handleDeleteFromLibrary = async (recipeId) => {
     if (!currentUser) return;
     try {
+      const recipeToArchive = libraryRecipes[recipeId];
+      if (recipeToArchive) {
+        const planRef = doc(
+          db,
+          "users",
+          currentUser.uid,
+          "mealPlans",
+          "current",
+        );
+        await setDoc(
+          planRef,
+          {
+            persistentRecipes: {
+              ...persistentRecipes,
+              [recipeId]: recipeToArchive,
+            },
+          },
+          { merge: true },
+        );
+      }
       await deleteDoc(
         doc(db, "users", currentUser.uid, "mealPlanRecipes", recipeId),
       );
-      const newPlan = { ...mealPlan };
-      Object.keys(newPlan).forEach((day) => {
-        Object.keys(newPlan[day]).forEach((meal) => {
-          if (newPlan[day][meal] === recipeId) delete newPlan[day][meal];
-        });
-      });
-      setMealPlan(newPlan);
-      saveMealPlan(newPlan);
     } catch (err) {
       console.error(err);
     }
@@ -167,7 +207,7 @@ export default function WeeklyMealPlan() {
     const dayData = mealPlan[dayKey] || {};
     const totals = { protein: 0, carbs: 0, fat: 0 };
     Object.values(dayData).forEach((recipeId) => {
-      const recipe = libraryRecipes[recipeId];
+      const recipe = getRecipeData(recipeId);
       if (recipe && recipe.macros) {
         totals.protein += Number(recipe.macros.protein || 0);
         totals.carbs += Number(recipe.macros.carbs || 0);
@@ -195,7 +235,6 @@ export default function WeeklyMealPlan() {
               Fuel <span className="text-brand">Schedule</span>
             </h1>
           </div>
-
           <div className="flex items-center gap-2 bg-card border border-border p-2 rounded-2xl shadow-xl">
             <button
               onClick={() => setStartDate(addDays(startDate, -DAYS_TO_SHOW))}
@@ -232,7 +271,7 @@ export default function WeeklyMealPlan() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* LIBRARY PANEL */}
+          {/* LIBRARY */}
           <div className="lg:col-span-1">
             <div className="bg-card border border-border rounded-[2rem] p-6 shadow-xl sticky top-28">
               <h2 className="text-base font-black uppercase tracking-widest mb-6 border-b border-border pb-4">
@@ -290,7 +329,7 @@ export default function WeeklyMealPlan() {
             </div>
           </div>
 
-          {/* SCHEDULE PANEL */}
+          {/* SCHEDULE */}
           <div className="lg:col-span-3">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {days.map((day) => {
@@ -308,33 +347,16 @@ export default function WeeklyMealPlan() {
                       <div className="text-3xl font-black tracking-tighter mb-3">
                         {day.getDate()}
                       </div>
-                      <div className="flex items-center justify-center gap-3 py-2 px-3 bg-black/40 rounded-full border border-white/10">
-                        <div className="flex flex-col">
-                          <span className="text-[9px] text-danger font-black">
-                            P
-                          </span>
-                          <span className="text-xs font-black">
-                            {Math.round(totals.protein)}
-                          </span>
-                        </div>
-                        <div className="w-px h-6 bg-white/10" />
-                        <div className="flex flex-col">
-                          <span className="text-[9px] text-blue-400 font-black">
-                            C
-                          </span>
-                          <span className="text-xs font-black">
-                            {Math.round(totals.carbs)}
-                          </span>
-                        </div>
-                        <div className="w-px h-6 bg-white/10" />
-                        <div className="flex flex-col">
-                          <span className="text-[9px] text-yellow-400 font-black">
-                            F
-                          </span>
-                          <span className="text-xs font-black">
-                            {Math.round(totals.fat)}
-                          </span>
-                        </div>
+                      <div className="flex items-center justify-center gap-3 py-2 px-3 bg-black/40 rounded-full border border-white/10 text-[10px] font-black uppercase">
+                        <span className="text-danger">
+                          P:{Math.round(totals.protein)}
+                        </span>
+                        <span className="text-blue-400">
+                          C:{Math.round(totals.carbs)}
+                        </span>
+                        <span className="text-yellow-400">
+                          F:{Math.round(totals.fat)}
+                        </span>
                       </div>
                     </div>
 
@@ -342,17 +364,21 @@ export default function WeeklyMealPlan() {
                       {MEALS.map((mealKey) => {
                         const recipeId = mealPlan[dayKey]?.[mealKey];
                         const recipe = recipeId
-                          ? libraryRecipes[recipeId]
+                          ? getRecipeData(recipeId)
                           : null;
                         return (
                           <div
                             key={mealKey}
                             onDragOver={(e) => e.preventDefault()}
-                            onDrop={() => handleDrop(dayKey, mealKey)}
+                            onDrop={() => {
+                              if (draggedRecipe)
+                                executeAdd(draggedRecipe.id, dayKey, mealKey);
+                              setDraggedRecipe(null);
+                            }}
                             className={`relative min-h-[130px] rounded-[1.5rem] border-2 border-dashed p-4 ${recipe ? "bg-card border-border shadow-md" : "bg-bg/50 border-white/5"}`}
                           >
                             <div className="text-[10px] font-black uppercase text-muted/50 mb-3">
-                              {mealKey.replace(/\d/g, "").trim()}
+                              {mealKey}
                             </div>
                             {recipe ? (
                               <div className="space-y-4">
@@ -399,12 +425,12 @@ export default function WeeklyMealPlan() {
         </div>
       </div>
 
-      {/* MOBILE ADD MODAL */}
-      {mobileAddRecipe && !replaceConfirm && (
+      {/* MODALS */}
+      {mobileAddRecipe && (
         <div className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-md flex justify-center items-start pt-6 px-4 overflow-y-auto">
-          <div className="bg-card border border-border w-full max-w-md rounded-[2.5rem] p-8 mb-12 shadow-2xl animate-in slide-in-from-top duration-300">
+          <div className="bg-card border border-border w-full max-w-md rounded-[2.5rem] p-8 mb-12 shadow-2xl">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-black uppercase tracking-tight">
+              <h2 className="text-2xl font-black uppercase">
                 Add <span className="text-brand">{mobileAddRecipe.title}</span>
               </h2>
               <button
@@ -417,33 +443,25 @@ export default function WeeklyMealPlan() {
             <div className="space-y-8">
               {days.map((day) => (
                 <div key={getDayKey(day)} className="space-y-3">
-                  <div className="text-sm font-black uppercase text-brand bg-brand/10 p-3 rounded-xl text-center tracking-widest">
+                  <div className="text-sm font-black uppercase text-brand bg-brand/10 p-3 rounded-xl text-center">
                     {getDayLabel(day)} {day.getDate()}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    {MEALS.map((m) => {
-                      const isOccupied = !!mealPlan[getDayKey(day)]?.[m];
-                      return (
-                        <button
-                          key={m}
-                          onClick={() =>
-                            handleMobileSlotClick(
-                              mobileAddRecipe,
-                              getDayKey(day),
-                              m,
-                            )
-                          }
-                          className={`p-5 text-xs font-black uppercase border-2 rounded-2xl flex justify-between items-center ${isOccupied ? "bg-white/5 border-white/5 text-muted/40" : "bg-bg border-border"}`}
-                        >
-                          {m.replace(/\d/g, "").trim()}
-                          {isOccupied ? (
-                            <Check size={16} className="text-brand/50" />
-                          ) : (
-                            <Plus size={16} className="text-brand" />
-                          )}
-                        </button>
-                      );
-                    })}
+                    {MEALS.map((m) => (
+                      <button
+                        key={m}
+                        onClick={() =>
+                          handleMobileSlotClick(
+                            mobileAddRecipe,
+                            getDayKey(day),
+                            m,
+                          )
+                        }
+                        className="p-5 text-xs font-black uppercase border-2 border-border rounded-2xl flex justify-between items-center"
+                      >
+                        {m} <Plus size={16} className="text-brand" />
+                      </button>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -452,21 +470,13 @@ export default function WeeklyMealPlan() {
         </div>
       )}
 
-      {/* REPLACE CONFIRMATION */}
       {replaceConfirm && (
         <div className="fixed inset-0 z-[130] bg-black/95 flex items-center justify-center px-4">
           <div className="bg-card border border-border p-8 rounded-[2rem] max-w-sm w-full text-center space-y-6">
             <h2 className="text-xl font-black uppercase">Replace Meal?</h2>
             <p className="text-sm text-muted">
-              Replace{" "}
-              <span className="text-text font-bold">
-                "{replaceConfirm.existingTitle}"
-              </span>{" "}
-              with{" "}
-              <span className="text-brand font-bold">
-                "{replaceConfirm.newRecipe.title}"
-              </span>
-              ?
+              Replace "{replaceConfirm.existingTitle}" with "
+              {replaceConfirm.newRecipe.title}"?
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -492,7 +502,6 @@ export default function WeeklyMealPlan() {
         </div>
       )}
 
-      {/* DELETE CONFIRMATION */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-[120] bg-black/90 flex items-center justify-center px-4">
           <div className="bg-card border border-border p-8 rounded-[2rem] max-w-sm w-full text-center">
