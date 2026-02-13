@@ -161,7 +161,7 @@ export default function Register() {
         </div>
 
         {/* Visual side (desktop) */}
-        <div className="hidden lg:flex flex-col justify-between p-12 bg-[url('https://elevated-fuel.netlify.app/social-share.png')] bg-cover bg-center relative order-1 lg:order-2">
+        <div className="hidden lg:flex flex-col justify-between p-12 bg-[url('https://knockoutpw.online/social-share.png')] bg-cover bg-center relative order-1 lg:order-2">
           {/* <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" /> */}
           <div className="relative z-10 text-right">
             {/* <h2 className="text-4xl font-black tracking-tighter text-brand">

@@ -18,15 +18,14 @@ export default function Login() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // Reset password UI
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetBusy, setResetBusy] = useState(false);
   const [resetMsg, setResetMsg] = useState("");
 
-  const loginUrlForReset = useMemo(() => {
-    return "https://elevated-fuel.netlify.app/Login";
-  }, []);
+  // const loginUrlForReset = useMemo(() => {
+  //   return "https://elevated-fuel.netlify.app/Login";
+  // }, []);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -190,12 +189,9 @@ export default function Login() {
         </div>
 
         {/* Visual side (desktop) */}
-        <div className="hidden lg:flex flex-col justify-between p-12 bg-[url('https://elevated-fuel.netlify.app/social-share.png')] bg-cover bg-center relative order-1 lg:order-2">
-          {/* Decorative side content can go here */}
-        </div>
+        <div className="hidden lg:flex flex-col justify-between p-12 bg-[url('https://knockoutpw.online/social-share.png')] bg-cover bg-center relative order-1 lg:order-2"></div>
       </div>
 
-      {/* Reset Password Modal */}
       {/* Reset Password Modal */}
       {showReset && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
@@ -256,8 +252,22 @@ export default function Login() {
                 </div>
 
                 {resetMsg && (
-                  <div className="text-sm text-brand bg-brand/10 border border-brand/20 rounded-2xl p-4">
-                    {resetMsg}
+                  <div className="space-y-3">
+                    <div className="text-sm text-brand bg-brand/10 border border-brand/20 rounded-2xl p-4">
+                      {resetMsg}
+                    </div>
+
+                    {/* Explicit spam notification if the email was successfully sent */}
+                    {!resetMsg.includes("Could not") &&
+                      !resetMsg.includes("Enter the email") && (
+                        <div className="flex items-center gap-2 px-4 text-xs text-muted/80">
+                          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
+                          <p>
+                            Pro-tip: Don't forget to check your{" "}
+                            <strong>spam folder</strong>!
+                          </p>
+                        </div>
+                      )}
                   </div>
                 )}
 

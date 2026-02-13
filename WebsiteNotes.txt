@@ -21,4 +21,21 @@ https://www.bfamcooking.com/recipes/the-secret-to-perfectly-crispy-pan-seared-ch
 
 
 
-RECOV LRZ9DFDTYNNMN43EC89E87NG
+TO DO:
+++View Recipe
+1. When viewing a recipe, click picture takes to link
+2. Button to View Link Source move to under picture - more pronounced
+
+++ MEAL PLAN
+1. When I remove a meal from meal plan fuel side, dont remove from my actual days I have set it
+2. Add filter to meal plan fuel
+
+++ FILTER
+1. Show Total Recipe Count At Top
+2. Add Date Filter
+3. Add Most Popular Filter 
+4. First / Last options 
+5. If date = Today or Status Pending show <NEW> tag
+
+++ RECIPE CARD
+1. If quick Added, for Macros and Servings, have it show "Quick Added, details needed"
