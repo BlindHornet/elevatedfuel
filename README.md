@@ -69,7 +69,10 @@ VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_STORAGE_BUCKET=
 VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
-VITE_ADMIN_EMAIL=
+
+# =====================================
+# Email Service Templates
+# =====================================
 VITE_EMAILJS_SERVICE=
 VITE_EMAILJS_TEMPLATE=
 VITE_EMAILJS_PUBLIC=
@@ -77,7 +80,7 @@ VITE_EMAILJS_PUBLIC=
 # =====================================
 # Admin / Roles
 # =====================================
-VITE_ADMIN_EMAIL=admin@example.com
+VITE_ADMIN_EMAIL=
 ```
 
 5. Then within terminal inside your project folder type **npm run dev**
