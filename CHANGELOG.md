@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.12] - 2026-02-14
+
+### Fixed
+
+- Website Public Data
+  - Changed URL Hosting as the Free Site is currently down
+
 ## [0.2.11] - 2026-02-13
 
 ### Fixed
