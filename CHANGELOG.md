@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.17] - 2026-02-14
+
+### Changed
+
+- View Recipe
+  - Moved the Title To Be At Top on Mobile
+  - Moved P/C/F Under Title
+  - Moved 'Add to Meal Plan' Button under 'View Source Link' Button
+  - Moved 'Shopping List' and 'I Made This' Buttons under 'Add to Meal Plan'
+  - Moved Tags Under Shopping List' and 'I Made This' Buttons
+
 ## [0.2.12] - 2026-02-14
 
 ### Fixed

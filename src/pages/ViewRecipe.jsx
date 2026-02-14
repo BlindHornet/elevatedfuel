@@ -419,6 +419,42 @@ export default function ViewRecipe() {
       <main className="max-w-5xl mx-auto px-4 mt-8">
         <div className="grid lg:grid-cols-[1fr_350px] gap-8">
           <div className="space-y-8">
+            {/* MOBILE ONLY: Title and Macros at the very top */}
+            <div className="lg:hidden space-y-4">
+              <h1 className="text-3xl font-black tracking-tighter uppercase">
+                {recipe.title}
+              </h1>
+
+              <div className="flex items-center justify-between gap-3 py-3 px-4 bg-card border border-border rounded-2xl">
+                <div className="flex flex-col items-center flex-1">
+                  <span className="text-red-500 text-[10px] font-bold uppercase">
+                    Protein
+                  </span>
+                  <span className="text-text font-black text-base">
+                    {scaledMacros.protein}g
+                  </span>
+                </div>
+                <div className="w-px h-8 bg-border"></div>
+                <div className="flex flex-col items-center flex-1">
+                  <span className="text-blue-500 text-[10px] font-bold uppercase">
+                    Carbs
+                  </span>
+                  <span className="text-text font-black text-base">
+                    {scaledMacros.carbs}g
+                  </span>
+                </div>
+                <div className="w-px h-8 bg-border"></div>
+                <div className="flex flex-col items-center flex-1">
+                  <span className="text-yellow-500 text-[10px] font-bold uppercase">
+                    Fats
+                  </span>
+                  <span className="text-text font-black text-base">
+                    {scaledMacros.fat}g
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* IMAGE & RATINGS */}
             <div className="space-y-3">
               {" "}
@@ -480,6 +516,62 @@ export default function ViewRecipe() {
                   </span>
                 </a>
               )}
+              {/* MOBILE ONLY: Action Buttons and Tags below View Source Link */}
+              <div className="lg:hidden space-y-3">
+                {/* Add to Meal Plan */}
+                <button
+                  onClick={handleAddToMealPlan}
+                  className="w-full py-3 px-4 rounded-full bg-brand text-white font-bold uppercase text-[10px] tracking-widest hover:scale-[1.02] transition-transform"
+                >
+                  Add to Meal Plan
+                </button>
+
+                {/* Shopping List & I Made This */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleAddToShoppingList}
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-white/5 border border-white/10 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:bg-white/10 hover:text-white transition-all"
+                  >
+                    <ShoppingCart size={16} />
+                    Shopping List
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (!currentUser)
+                        return alert("Please log in to review.");
+                      const existingReview = comments.find(
+                        (c) => c.userId === currentUser.uid,
+                      );
+                      if (existingReview) {
+                        setEditingCommentId(existingReview.id);
+                        setUserRating(existingReview.rating);
+                        setUserComment(existingReview.comment);
+                      } else {
+                        setEditingCommentId(null);
+                        setUserRating(5);
+                        setUserComment("");
+                      }
+                      setShowReviewModal(true);
+                    }}
+                    className="w-full py-3 rounded-2xl border border-brand/60 text-brand font-bold uppercase flex items-center justify-center gap-2 text-[10px] tracking-widest hover:bg-brand/10 transition-colors"
+                  >
+                    <CheckCircle size={16} /> I Made This
+                  </button>
+                </div>
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2">
+                  {recipe.tags?.map((t) => (
+                    <div
+                      key={t}
+                      className="flex items-center gap-1.5 px-3 py-1 bg-brand/5 border border-brand/10 rounded-full text-[10px] font-bold text-brand uppercase"
+                    >
+                      <Tag size={10} /> {t}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* DESCRIPTION */}
@@ -630,13 +722,17 @@ export default function ViewRecipe() {
           </div>
 
           {/* SIDEBAR */}
-          <aside className="sticky top-24 space-y-6">
+          <aside className="lg:sticky lg:top-24 space-y-6">
             <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
-              <h1 className="text-3xl font-black tracking-tighter uppercase mb-6">
+              {/* Title - Desktop Only (mobile shows at top of page) */}
+              <h1 className="hidden lg:block text-3xl font-black tracking-tighter uppercase mb-6">
                 {recipe.title}
               </h1>
 
-              <div className="flex items-center justify-between bg-bg rounded-2xl p-4 border border-border mb-6">
+              {/* MOBILE ONLY: Macros removed from here (now at top of page) */}
+
+              {/* Servings Control - Desktop Only */}
+              <div className="hidden lg:flex items-center justify-between bg-bg rounded-2xl p-4 border border-border mb-6">
                 <span className="text-xs font-bold uppercase text-muted">
                   Servings
                 </span>
@@ -657,8 +753,8 @@ export default function ViewRecipe() {
                 </div>
               </div>
 
-              {/* MACROS WITH SPECIFIC COLORS */}
-              <div className="space-y-3 mb-8">
+              {/* DESKTOP ONLY: Macros Stacked */}
+              <div className="hidden lg:block space-y-3 mb-8">
                 <div className="bg-bg border border-border p-3 rounded-xl flex justify-between items-center text-xs font-bold uppercase">
                   <span className="text-red-500">Protein</span>
                   <span className="text-text">{scaledMacros.protein}g</span>
@@ -673,8 +769,8 @@ export default function ViewRecipe() {
                 </div>
               </div>
 
-              {/* TAGS */}
-              <div className="flex flex-wrap gap-2 mb-8">
+              {/* DESKTOP ONLY: Tags */}
+              <div className="hidden lg:flex flex-wrap gap-2 mb-8">
                 {recipe.tags?.map((t) => (
                   <div
                     key={t}
@@ -685,8 +781,8 @@ export default function ViewRecipe() {
                 ))}
               </div>
 
-              {/* Add To Meal Plan and Shopping List Buttons */}
-              <div className="space-y-3">
+              {/* DESKTOP ONLY: Buttons */}
+              <div className="hidden lg:block space-y-3">
                 <button
                   onClick={handleAddToMealPlan}
                   className="w-full py-4 rounded-full bg-brand text-white font-black uppercase tracking-widest shadow-lg hover:scale-[1.02] transition-transform"
