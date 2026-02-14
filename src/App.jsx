@@ -18,6 +18,12 @@ import WeeklyMealPlan from "./pages/WeeklyMealPlan";
 import Storefront from "./pages/Storefront";
 import ShoppingList from "./pages/ShoppingList";
 
+// Settings Pages
+import WhatsNewPage from "./pages/settings/WhatsNewPage";
+import AdminSuggestionsPage from "./pages/settings/AdminSuggestion";
+import MakeSuggestionPage from "./pages/settings/MakeSuggestion";
+import SuggestionDetailPage from "./pages/settings/SuggestionDetail";
+
 export default function App() {
   return (
     <div className="min-h-screen bg-bg">
@@ -44,6 +50,10 @@ export default function App() {
         <Route path="/weekly-meal-plan" element={<WeeklyMealPlan />} />
         <Route path="/recommendations" element={<Storefront />} />
         <Route path="/shopping-list" element={<ShoppingList />} />
+        <Route path="/whats-new" element={<WhatsNewPage />} />
+        <Route path="/suggestions" element={<MakeSuggestionPage />} />
+        <Route path="/suggestion/:id" element={<SuggestionDetailPage />} />
+        <Route path="/admin/suggestions" element={<AdminSuggestionsPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -13,15 +13,29 @@ import {
   AlertCircle,
   ShoppingCart,
   Zap,
+  Lightbulb,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 // Component Imports
 import AppVersion from "./AppVersion";
 
-// Modal Component for "Not Yet Implemented"
-function ImplementationModal({ isOpen, onClose }) {
+// Firebase Imports
+import { auth } from "../lib/firebase";
+
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
+
+// Settings Modal Component
+function SettingsModal({ isOpen, onClose, navigate }) {
   if (!isOpen) return null;
+
+  const currentUser = auth.currentUser;
+  const isAdmin = currentUser?.email === ADMIN_EMAIL;
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
@@ -32,7 +46,7 @@ function ImplementationModal({ isOpen, onClose }) {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-sm">
+      <div className="relative w-full max-w-md">
         {/* Ambient glow */}
         <div className="absolute inset-0 bg-brand/20 blur-3xl rounded-full scale-150" />
 
@@ -43,37 +57,84 @@ function ImplementationModal({ isOpen, onClose }) {
           {/* Inner glow */}
           <div className="absolute inset-0 rounded-[2rem] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] pointer-events-none" />
 
-          <div className="relative p-10 text-center space-y-6">
-            <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-brand/20 to-brand-600/20 backdrop-blur-xl border border-brand/30 flex items-center justify-center shadow-lg shadow-brand/20">
-              <AlertCircle className="text-brand" size={36} strokeWidth={2} />
+          <div className="relative p-8">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand/20 to-brand-600/20 backdrop-blur-xl border border-brand/30 flex items-center justify-center shadow-lg shadow-brand/20">
+                <Settings className="text-brand" size={24} strokeWidth={2} />
+              </div>
+              <h3 className="text-2xl font-black tracking-tight text-white uppercase">
+                Settings
+              </h3>
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-2xl font-black tracking-tight text-white uppercase">
-                Coming Soon
-              </h3>
-              <p className="text-sm text-white/50 font-medium leading-relaxed">
-                The Settings module is currently under development and is{" "}
-                <span className="text-brand">not yet implemented</span>.
-              </p>
+              {/* What's New - For Everyone */}
+              <button
+                onClick={() => handleNavigation("/whats-new")}
+                className="w-full p-4 rounded-xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] flex items-center gap-4 hover:bg-white/[0.06] hover:border-brand/30 transition-all group text-left"
+              >
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand/20 to-brand-600/20 backdrop-blur-xl border border-brand/30 flex items-center justify-center">
+                  <Sparkles className="text-brand" size={20} strokeWidth={2} />
+                </div>
+                <div>
+                  <div className="font-bold text-sm text-white">What's New</div>
+                  <div className="text-xs text-white/40">View changelog</div>
+                </div>
+              </button>
+
+              {/* Conditional Options Based on Admin Status */}
+              {isAdmin ? (
+                // Admin sees Admin Suggestions Page
+                <button
+                  onClick={() => handleNavigation("/admin/suggestions")}
+                  className="w-full p-4 rounded-xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] flex items-center gap-4 hover:bg-white/[0.06] hover:border-brand/30 transition-all group text-left"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-xl border border-yellow-500/30 flex items-center justify-center">
+                    <Lightbulb
+                      className="text-yellow-500"
+                      size={20}
+                      strokeWidth={2}
+                    />
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm text-white">
+                      Admin Suggestions
+                    </div>
+                    <div className="text-xs text-white/40">
+                      Review all user suggestions
+                    </div>
+                  </div>
+                </button>
+              ) : (
+                // Regular users see Make a Suggestion Page
+                <button
+                  onClick={() => handleNavigation("/suggestions")}
+                  className="w-full p-4 rounded-xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] flex items-center gap-4 hover:bg-white/[0.06] hover:border-brand/30 transition-all group text-left"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-xl border border-blue-500/30 flex items-center justify-center">
+                    <Lightbulb
+                      className="text-blue-500"
+                      size={20}
+                      strokeWidth={2}
+                    />
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm text-white">
+                      Make a Suggestion
+                    </div>
+                    <div className="text-xs text-white/40">
+                      Share your ideas
+                    </div>
+                  </div>
+                </button>
+              )}
             </div>
 
             <button
               onClick={onClose}
-              className="group relative w-full px-8 py-4 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full mt-6 py-3 text-xs font-semibold uppercase text-white/40 tracking-wider hover:text-white/60 transition-colors"
             >
-              {/* Background layers */}
-              <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand-600" />
-              <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-
-              {/* Border glow */}
-              <div className="absolute inset-0 rounded-2xl border border-white/20 shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]" />
-
-              {/* Content */}
-              <span className="relative text-white font-semibold tracking-wide uppercase text-sm">
-                Okay
-              </span>
+              Close
             </button>
           </div>
         </div>
@@ -369,9 +430,10 @@ export default function Navbar() {
         </div>
       )}
 
-      <ImplementationModal
+      <SettingsModal
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
+        navigate={navigate}
       />
     </>
   );

@@ -37,21 +37,14 @@ Future plans are to add in shopping list from ingredients, pull recipes automati
 
 ## Future Development Goals
 
-1. Admin
-   - Quickly Pullback Pending Submissoins (Verify No Junk Added)
-     - Approve / Reject Submissions
-2. Pages
+1. Pages
    - Settings
      - Link Family Member (Shared Meal Plan/Favorites)
-     - Change Name / Other Settings
-     - Make a Suggestion
-     - Whats New including version numbers
-3. Add Recipe
+2. Add Recipe
    - If link provided, try to scrape directions and ingredients
    - Add custom image for card
-4. Filters
-
-- Advanced Filter to show highest rated first
+3. Filters
+   - Advanced Filter to show highest rated first
 
 # Contributing
 

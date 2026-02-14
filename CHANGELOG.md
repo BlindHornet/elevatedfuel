@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.5.20] - 2026-02-14
+
+### Added
+
+- Whats New Page
+  - Reads ChangeLog file to reflect within website
+- Make A Suggestion Page
+  - Allows users to submit suggestions and get feedback from Admin
+- Admin Review Page
+  - Allows admin to quickly view the suggestions and provide feedback with status
+
+### Changed
+
+- Navbar Settings Link
+  - If Admin only show Admin Review Page
+  - If User only show Make A Suggestion
+  - Both types see Whats New
+
 ## [0.2.17] - 2026-02-14
 
 ### Changed
