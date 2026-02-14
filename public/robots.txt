@@ -1,5 +1,5 @@
 # Elevated Fuel - Healthy Food Search Database
-# https://elevated-fuel.netlify.app
+# https://knockoutpw.online
 
 User-agent: *
 Disallow:
@@ -12,4 +12,4 @@ Disallow: /draft/
 Disallow: /api/
 
 # Sitemap
-Sitemap: https://elevated-fuel.netlify.app/sitemap.xml
+Sitemap: https://knockoutpw.online/sitemap.xml
