@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.20] - 2026-02-14
+## [0.5.2] - 2026-02-14
 
 ### Added
 
@@ -17,6 +17,8 @@
   - If Admin only show Admin Review Page
   - If User only show Make A Suggestion
   - Both types see Whats New
+- Logo
+  - Changed to reflect new logo
 
 ## [0.2.17] - 2026-02-14
 
